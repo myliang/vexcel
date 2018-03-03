@@ -1,0 +1,343 @@
+@border-style: 1px solid #e0e2e4;
+@icon-size: 18px;
+
+.v-excel {
+  font-size: 14px;
+  line-height: normal;
+  user-select: none;
+  font-family: Roboto, Helvetica, Arial, sans-serif;
+
+  table {
+    table-layout: fixed;
+    text-align: left;
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    color: #666;
+
+    td, th {
+      transition: background .1s ease,color .1s ease;
+      border-bottom: @border-style;
+      border-right: @border-style;
+      white-space: nowrap;
+      text-overflow: ellipsis;
+      overflow: hidden;
+      padding: 0 4px;
+      // height: 22px;
+      line-height: 22px;
+    }
+
+    td.active, th.active {
+      background: #f3f7ff!important;
+    }
+
+    th {
+      border-top: @border-style;
+      text-align: center;
+    }
+
+    th, td:first-child {
+      font-size: 12px;
+      background: #f4f5f8;
+      font-weight: normal;
+    }
+
+    td:first-child, th:first-child {
+      border-left: @border-style;
+      text-align: center;
+    }
+  }
+
+  .ve-header, .ve-body {
+    position: relative;
+  }
+
+}
+
+.ve-edit {
+  position: absolute;
+  text-align: left;
+  // z-index: 10;
+  border: 2px solid rgb(75, 137, 255);
+  line-height: 0;
+
+  textarea {
+    box-sizing: content-box;
+    border: none;
+    padding: 0 2px 0;
+    outline-width: 0;
+    resize: none;
+    text-align: start;
+    // min-width: 100px;
+    max-width: 500px;
+    line-height: 19px;
+    overflow-y: hidden;
+    font-family: inherit;
+    font-size: inherit;
+    color: inherit;
+  }
+}
+
+.ve-resizer {
+  position: absolute;
+  &.horizontal {
+    cursor: row-resize;
+  }
+  &.vertical {
+    cursor: col-resize;
+  }
+}
+.ve-resizer-line {
+  position: absolute;
+  z-index: 100;
+  &.horizontal {
+    border-bottom: 2px dashed rgb(75, 137, 255);
+  }
+  &.vertical {
+    border-right: 2px dashed rgb(75, 137, 255);
+  }
+}
+
+.ve-borders {
+  box-sizing: content-box;
+
+  .ve-border {
+    position: absolute;
+    font-size: 0;
+    // z-index: 11;
+  }
+
+  .corner {
+    cursor: crosshair;
+    font-size: 0;
+    height: 5px;
+    width: 5px;
+    border: 2px solid rgb(255, 255, 255);
+    position: absolute;
+    bottom: -6px;
+    right: -6px;
+    // z-index: 12;
+  }
+}
+
+.ve-bars {
+  .ve-toolbar {
+    width: 100%;
+    height: 40px;
+    text-align: left;
+    padding: 0 45px;
+    border-bottom: @border-style;
+    background: #f5f6f7;
+
+    .ve-item {
+      padding: 0;
+      margin: 7px 1px 0;
+      height: 26px;
+      width: 26px;
+      text-align: center;
+    }
+
+  }
+  .ve-editor-bar {
+    width: 100%;
+    height: 26px;
+    line-height: 26px;
+    position: relative;
+    background: #fff;
+    padding: 0;
+  }
+}
+
+.ve-formula-bar {
+  position: relative;
+  height: 100%;
+
+  .ve-formula-label {
+    width: 50px;
+    height: 100%;
+    box-sizing: border-box;
+    display: inline-block;
+    text-align: center;
+    // line-height: inherit;
+    border-right: 1px solid #e0e2e4;
+    background-color: #fff;
+    color: #777;
+    user-select: none;
+    float: left;
+    vertical-align: middle;
+  }
+
+  textarea {
+    width: calc(~'100% - 50px');
+    height: 100%;
+    box-sizing: border-box;
+    font-family: inherit;
+    font-size: inherit;
+    padding: 4px 10px;
+    position: relative;
+    float: left;
+    resize: none;
+    overflow-y: hidden;
+    border: none;
+    outline-width: 0;
+  }
+}
+.ve-formula-bar-resizer {
+  cursor: ns-resize;
+  // border-bottom: 1px solid #c0c0c0;
+  height: 4px;
+  position: absolute;
+  width: 100%;
+  left: 0;
+  bottom: 0;
+}
+
+.ve-icon {
+  height: 18px;
+  width: 18px;
+  margin: 1px 2px 2px 1px;
+  direction: ltr;
+  text-align: left;
+  user-select: none;
+  vertical-align: middle;
+  overflow: hidden;
+  opacity: 0.55;
+  position: relative;
+  display: inline-block;
+}
+.ve-icon-img {
+  background-image: url('./assets/sprite.svg');
+  position: absolute;
+  width: 262px;
+  height: 444px;
+
+  &.undo {
+    left: 0;
+    top: 0;
+  }
+  &.redo {
+    left: -1 * @icon-size;
+    top: 0;
+  }
+  &.print {
+    left: -2 * @icon-size;
+    top: 0;
+  }
+  &.paintformat {
+    left: -3 * @icon-size;
+    top: 0;
+  }
+  &.clearformat {
+    left: -4 * @icon-size;
+    top: 0;
+  }
+  &.bold {
+    left: -5 * @icon-size;
+    top: 0;
+  }
+  &.italic {
+    left: -6 * @icon-size;
+    top: 0;
+  }
+  &.underline {
+    left: -7 * @icon-size;
+    top: 0;
+  }
+  &.strikethrough {
+    left: -8 * @icon-size;
+    top: 0;
+  }
+  &.text-color {
+    left: -9 * @icon-size;
+    top: 0;
+  }
+  &.cell-color {
+    left: -10 * @icon-size;
+    top: 0;
+  }
+  &.merge {
+    left: -11 * @icon-size;
+    top: 0;
+  }
+  &.align-left {
+    left: -12 * @icon-size;
+    top: 0;
+  }
+  &.align-center {
+    left: -13 * @icon-size;
+    top: 0;
+  }
+  &.align-right {
+    left: 0;
+    top: -1 * @icon-size;
+  }
+  &.valign-top {
+    left: -1 * @icon-size;
+    top: -1 * @icon-size;
+  }
+  &.valign-middle {
+    left: -2 * @icon-size;
+    top: -1 * @icon-size;
+  }
+  &.valign-bottom {
+    left: -3 * @icon-size;
+    top: -1 * @icon-size;
+  }
+  &.textwrap {
+    left: -4 * @icon-size;
+    top: -1 * @icon-size;
+  }
+  &.autofilter {
+    left: -5 * @icon-size;
+    top: -1 * @icon-size;
+  }
+  &.formula {
+    left: -6 * @icon-size;
+    top: -1 * @icon-size;
+  }
+}
+
+.ve-menu {
+  &.vertical {
+    .ve-item-separator {
+      background: #e0e2e4;
+      height: 1px;
+      margin: 5px 0;
+    }
+  }
+  &.horizontal {
+    .ve-item {
+      display: inline-block;
+    }
+    .ve-item-separator {
+      display: inline-block;
+      background: #e0e2e4;
+      width: 1px;
+      vertical-align: middle;
+      height: 18px;
+      margin: 0 3px;
+    }
+  }
+  .ve-item {
+    border-radius: 2px;
+    user-select: none;
+    background: 0;
+    border: 1px solid transparent;
+    outline: none;
+    padding: 0;
+    height: 24px;
+    color: #333;
+    line-height: 24px;
+    list-style: none;
+    font-weight: bold;
+    cursor: default;
+
+    &:not(.separator):hover {
+      background: rgba(0, 0, 0, .06);
+      .ve-icon {
+        opacity: 0.7;
+      }
+    }
+  }
+
+}
