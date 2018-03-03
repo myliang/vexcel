@@ -1,15 +1,16 @@
 <template>
   <div class="ve-item">
-    <div class="ve-icon">
-      <div :class="['ve-icon-img', it]"></div>
-    </div>
+    <icon :name="icon"/>
+    <slot></slot>
   </div>
 </template>
 <script>
+import Icon from './Icon.vue'
 export default {
   name: 'menu-item-icon',
+  components: {Icon},
   props: {
-    it: { type: String }
+    icon: { type: String }
   }
 }
 </script>

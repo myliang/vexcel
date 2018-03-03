@@ -11,7 +11,7 @@
     <div class="ve-header">
       <table>
         <colgroup>
-          <col width="50"/>
+          <col width="60"/>
           <col
             v-for="(col, index) in data.cols"
             :width="col.width"
@@ -39,7 +39,7 @@
     <div class="ve-body" ref="body">
       <table>
         <colgroup>
-          <col width="50"/>
+          <col width="60"/>
           <col
             v-for="(col, index) in data.cols"
             :width="col.width"

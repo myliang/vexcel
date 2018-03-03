@@ -5,7 +5,7 @@
   font-size: 14px;
   line-height: normal;
   user-select: none;
-  font-family: Roboto, Helvetica, Arial, sans-serif;
+  font-family: "Microsoft YaHei" Roboto, Helvetica, Arial, sans-serif;
 
   table {
     table-layout: fixed;
@@ -153,7 +153,7 @@
   height: 100%;
 
   .ve-formula-label {
-    width: 50px;
+    width: 60px;
     height: 100%;
     box-sizing: border-box;
     display: inline-block;
@@ -161,6 +161,7 @@
     // line-height: inherit;
     border-right: 1px solid #e0e2e4;
     background-color: #fff;
+    font-size: 12px;
     color: #777;
     user-select: none;
     float: left;
@@ -168,7 +169,7 @@
   }
 
   textarea {
-    width: calc(~'100% - 50px');
+    width: calc(~'100% - 60px');
     height: 100%;
     box-sizing: border-box;
     font-family: inherit;
@@ -190,6 +191,63 @@
   width: 100%;
   left: 0;
   bottom: 0;
+}
+
+
+.ve-menu {
+  &.vertical {
+    .ve-item-separator {
+      background: #e0e2e4;
+      height: 1px;
+      margin: 5px 0;
+    }
+  }
+  &.horizontal {
+    .ve-item {
+      display: inline-block;
+    }
+    .ve-item-separator {
+      display: inline-block;
+      background: #e0e2e4;
+      width: 1px;
+      vertical-align: middle;
+      height: 18px;
+      margin: 0 3px;
+    }
+  }
+  .ve-item {
+    border-radius: 2px;
+    user-select: none;
+    background: 0;
+    border: 1px solid transparent;
+    outline: none;
+    padding: 0;
+    height: 24px;
+    color: #333;
+    line-height: 24px;
+    list-style: none;
+    font-weight: bold;
+    cursor: default;
+
+    &:not(.separator):hover {
+      background: rgba(0, 0, 0, .06);
+      .ve-icon {
+        opacity: 0.7;
+      }
+    }
+  }
+
+}
+
+.ve-dropdown {
+  position: relative;
+  display: inline-block;
+
+  .ve-dropdown-content {
+    position: absolute;
+    top: 5px;
+    right: 0;
+  }
 }
 
 .ve-icon {
@@ -295,49 +353,4 @@
     left: -6 * @icon-size;
     top: -1 * @icon-size;
   }
-}
-
-.ve-menu {
-  &.vertical {
-    .ve-item-separator {
-      background: #e0e2e4;
-      height: 1px;
-      margin: 5px 0;
-    }
-  }
-  &.horizontal {
-    .ve-item {
-      display: inline-block;
-    }
-    .ve-item-separator {
-      display: inline-block;
-      background: #e0e2e4;
-      width: 1px;
-      vertical-align: middle;
-      height: 18px;
-      margin: 0 3px;
-    }
-  }
-  .ve-item {
-    border-radius: 2px;
-    user-select: none;
-    background: 0;
-    border: 1px solid transparent;
-    outline: none;
-    padding: 0;
-    height: 24px;
-    color: #333;
-    line-height: 24px;
-    list-style: none;
-    font-weight: bold;
-    cursor: default;
-
-    &:not(.separator):hover {
-      background: rgba(0, 0, 0, .06);
-      .ve-icon {
-        opacity: 0.7;
-      }
-    }
-  }
-
 }
