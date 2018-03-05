@@ -4,9 +4,10 @@
       <excel-toolbar
         :formats="formats"
         :fonts="fonts"
-        :selectedFormat="toolbar.format"
-        :selectedFont="toolbar.font"
-        :selectedFontSize="toolbar.fontSize"
+        :format="toolbar.format"
+        :font="toolbar.font"
+        :fontSize="toolbar.fontSize"
+        :color="toolbar.color"
         @change-format="changeFormatHandler"
         @change-font="changeFontHandler"
         @change-font-size="changeFontSizeHandler"
@@ -127,7 +128,7 @@ export default {
       editorBar: {},
       rowResizer: null,
       colResizer: null,
-      toolbar: {font: this.fonts[0], format: this.formats[0], fontSize: 10}
+      toolbar: {font: this.fonts[0], format: this.formats[0], fontSize: 10, color: '#666'}
     }
   },
   mounted () {

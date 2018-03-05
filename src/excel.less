@@ -7,49 +7,49 @@
   user-select: none;
   font-family: "Microsoft YaHei" Roboto, Helvetica, Arial, sans-serif;
 
-  table {
-    table-layout: fixed;
-    text-align: left;
-    width: 100%;
-    border-collapse: separate;
-    border-spacing: 0;
-    color: #666;
-
-    td, th {
-      transition: background .1s ease,color .1s ease;
-      border-bottom: @border-style;
-      border-right: @border-style;
-      white-space: nowrap;
-      text-overflow: ellipsis;
-      overflow: hidden;
-      padding: 0 4px;
-      // height: 22px;
-      line-height: 22px;
-    }
-
-    td.active, th.active {
-      background: #f3f7ff!important;
-    }
-
-    th {
-      border-top: @border-style;
-      text-align: center;
-    }
-
-    th, td:first-child {
-      font-size: 12px;
-      background: #f4f5f8;
-      font-weight: normal;
-    }
-
-    td:first-child, th:first-child {
-      border-left: @border-style;
-      text-align: center;
-    }
-  }
-
   .ve-header, .ve-body {
     position: relative;
+
+    table {
+      table-layout: fixed;
+      text-align: left;
+      width: 100%;
+      border-collapse: separate;
+      border-spacing: 0;
+      color: #666;
+  
+      td, th {
+        transition: background .1s ease,color .1s ease;
+        border-bottom: @border-style;
+        border-right: @border-style;
+        white-space: nowrap;
+        text-overflow: ellipsis;
+        overflow: hidden;
+        padding: 0 4px;
+        // height: 22px;
+        line-height: 22px;
+      }
+  
+      td.active, th.active {
+        background: #f3f7ff!important;
+      }
+  
+      th {
+        border-top: @border-style;
+        text-align: center;
+      }
+  
+      th, td:first-child {
+        font-size: 12px;
+        background: #f4f5f8;
+        font-weight: normal;
+      }
+  
+      td:first-child, th:first-child {
+        border-left: @border-style;
+        text-align: center;
+      }
+    }
   }
 
 }
@@ -257,6 +257,7 @@
     z-index: 200;
     background: #fff;
     box-shadow: 1px 2px 5px 2px rgba(51,51,51,.15);
+    width: auto;
   }
 
   .ve-dropdown-header {
@@ -266,6 +267,28 @@
         left: -7 * @icon-size - 4px;
       }
     }
+  }
+}
+
+.ve-color-panel {
+  padding: 10px;
+  width: 100%;
+
+  table {
+    border-collapse: separate;
+    border-spacing: 0;
+    border: none;
+  }
+
+  table tr td {
+    padding: 0;
+    border: none;
+  }
+
+  .color-cell {
+    width: 20px;
+    height: 20px;
+    margin: 3px;
   }
 }
 

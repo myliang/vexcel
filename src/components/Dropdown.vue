@@ -18,7 +18,7 @@ export default {
   directives: { clickoutside },
   props: {
     title: { type: String, default: '' },
-    width: { type: String, default: '120px' }
+    width: { type: String, default: 'auto' }
   },
   data () {
     return {
