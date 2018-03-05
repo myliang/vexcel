@@ -1,7 +1,16 @@
 <template>
   <div class="v-excel">
     <div class="ve-bars">
-      <excel-toolbar></excel-toolbar>
+      <excel-toolbar
+        :formats="formats"
+        :fonts="fonts"
+        :selectedFormat="toolbar.format"
+        :selectedFont="toolbar.font"
+        :selectedFontSize="toolbar.fontSize"
+        @change-format="changeFormatHandler"
+        @change-font="changeFontHandler"
+        @change-font-size="changeFontSizeHandler"
+        ></excel-toolbar>
       <excel-editor-bar
         :cell="editorBar.cell"
         v-model="editorBar.value"
@@ -82,7 +91,7 @@ import ExcelEditor from './ExcelEditor'
 import ExcelResizer from './ExcelResizer'
 import ExcelEditorBar from './ExcelEditorBar'
 import ExcelToolbar from './ExcelToolbar'
-const defaultCols = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z']
+import { defaultCols, formats, fonts } from './settings.js'
 
 export default {
   name: 'v-excel',
@@ -94,6 +103,8 @@ export default {
     ExcelToolbar
   },
   props: {
+    formats: { type: Array, default: () => formats },
+    fonts: { type: Array, default: () => fonts },
     data: { type: Object, default: () => { return {} } } // [[{text: '', type: '', style: ''}]..]
   },
   data () {
@@ -115,7 +126,8 @@ export default {
       editor: {},
       editorBar: {},
       rowResizer: null,
-      colResizer: null
+      colResizer: null,
+      toolbar: {font: this.fonts[0], format: this.formats[0], fontSize: 10}
     }
   },
   mounted () {
@@ -156,6 +168,15 @@ export default {
       if (!evt.shiftKey) {
         this.editorBar = {cell: `${this.data.cols[col].index}${row + 1}`, value: this.getEditValue(row, col)}
       }
+    },
+    changeFormatHandler (format) {
+      this.toolbar.format = format
+    },
+    changeFontHandler (font) {
+      this.toolbar.font = font
+    },
+    changeFontSizeHandler (fontSize) {
+      this.toolbar.fontSize = fontSize
     },
     getEditValue (row, col) {
       this.data[row] = this.data[row] || {}

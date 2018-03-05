@@ -1,6 +1,6 @@
 <template>
-  <div class="ve-item">
-    <icon :name="icon"/>
+  <div class="ve-item" @click="clickHandler">
+    <icon :name="icon" v-if="icon"/>
     <slot></slot>
   </div>
 </template>
@@ -11,6 +11,11 @@ export default {
   components: {Icon},
   props: {
     icon: { type: String }
+  },
+  methods: {
+    clickHandler (evt) {
+      this.$emit('click', evt)
+    }
   }
 }
 </script>
