@@ -20,5 +20,11 @@ module.exports = {
     {key: 'Arial', title: 'Arial'},
     {key: 'Courier New', title: 'Courier New'},
     {key: 'Verdana', title: 'Verdana'}
+  ],
+  formulas: [
+    {key: 'SUM', title: '求和'},
+    {key: 'AVERAGE', title: '平均值'},
+    {key: 'MAX', title: '最大值'},
+    {key: 'MIN', title: '最小值'}
   ]
 }

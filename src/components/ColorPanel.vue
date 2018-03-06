@@ -3,12 +3,12 @@
     <table>
       <tbody>
         <tr>
-          <td v-for="color in hcolors" :key="color">
+          <td v-for="color in hcolors" :key="color" @click="pickerHandler(color)">
             <div :style="{'background-color': color}" class="color-cell"></div>
           </td>
         </tr>
         <tr v-for="(colors, index) in colorss" :key="index">
-          <td v-for="color in colors" :key="color">
+          <td v-for="color in colors" :key="color" @click="pickerHandler(color)">
             <div :style="{'background-color': color}" class="color-cell"></div>
           </td>
         </tr>
@@ -31,6 +31,11 @@ export default {
         ['rgb(165, 165, 165)', 'rgb(38, 38, 38)', 'rgb(58, 56, 56)', 'rgb(51, 63, 79)', 'rgb(47, 84, 150)', 'rgb(197, 91, 17)', 'rgb(123, 123, 123)', 'rgb(191, 144, 1)', 'rgb(46, 117, 181)', 'rgb(83, 129, 53)'],
         ['rgb(126, 126, 126)', 'rgb(12, 12, 12)', 'rgb(23, 22, 22)', 'rgb(35, 42, 53)', 'rgb(30, 56, 100)', 'rgb(131, 61, 11)', 'rgb(82, 82, 82)', 'rgb(126, 96, 0)', 'rgb(31, 78, 121)', 'rgb(55, 86, 35)']
       ]
+    }
+  },
+  methods: {
+    pickerHandler (color) {
+      this.$emit('change', color)
     }
   }
 }

@@ -4,14 +4,9 @@
       <excel-toolbar
         :formats="formats"
         :fonts="fonts"
-        :format="toolbar.format"
-        :font="toolbar.font"
-        :fontSize="toolbar.fontSize"
-        :color="toolbar.color"
-        @change-format="changeFormatHandler"
-        @change-font="changeFontHandler"
-        @change-font-size="changeFontSizeHandler"
-        ></excel-toolbar>
+        :formulas="formulas"
+        :styleAttrs="toolbar"
+        v-if="toolbar"></excel-toolbar>
       <excel-editor-bar
         :cell="editorBar.cell"
         v-model="editorBar.value"
@@ -92,7 +87,7 @@ import ExcelEditor from './ExcelEditor'
 import ExcelResizer from './ExcelResizer'
 import ExcelEditorBar from './ExcelEditorBar'
 import ExcelToolbar from './ExcelToolbar'
-import { defaultCols, formats, fonts } from './settings.js'
+import { defaultCols, formats, fonts, formulas } from './settings.js'
 
 export default {
   name: 'v-excel',
@@ -106,6 +101,7 @@ export default {
   props: {
     formats: { type: Array, default: () => formats },
     fonts: { type: Array, default: () => fonts },
+    formulas: { type: Array, default: () => formulas },
     data: { type: Object, default: () => { return {} } } // [[{text: '', type: '', style: ''}]..]
   },
   data () {
@@ -128,7 +124,16 @@ export default {
       editorBar: {},
       rowResizer: null,
       colResizer: null,
-      toolbar: {font: this.fonts[0], format: this.formats[0], fontSize: 10, color: '#666'}
+      toolbar: {
+        font: this.fonts[0],
+        format: this.formats[0],
+        fontSize: 10,
+        color: '#666',
+        backgroundColor: '#fff',
+        align: 'align-left',
+        valign: 'valign-middle',
+        formula: this.formulas[0]
+      }
     }
   },
   mounted () {
