@@ -2,18 +2,18 @@
   <div class="ve-toolbar">
     <div class="ve-menu horizontal">
       <item-icon :icon="it" :key="it" v-for="it in ['undo', 'redo', 'print', 'paintformat', 'clearformat']"></item-icon>
-      <dropdown :title="styleAttrs.format.title" class="ve-item" width="250px">
+      <dropdown :title="formatTitle" class="ve-item" width="250px">
         <div class="ve-menu vertical">
-          <item-icon v-for="(format, index) in formats" :key="index" @click="selectedHandler('format', format)">
+          <item-icon v-for="(format, index) in formats" :key="index" @click="selectedHandler('format', format.key)">
             {{format.title}}
             <div class="label">{{format.label}}</div>
           </item-icon>
         </div>
       </dropdown>
       <div class="ve-item-separator"></div>
-      <dropdown :title="styleAttrs.font.title" class="ve-item" width="170px">
+      <dropdown :title="fontTitle" class="ve-item" width="170px">
         <div class="ve-menu vertical">
-          <item-icon v-for="(font, index) in fonts" :key="index" @click="selectedHandler('font', font)">
+          <item-icon v-for="(font, index) in fonts" :key="index" @click="selectedHandler('font', font.key)">
             {{ font.title }}
           </item-icon>
         </div>
@@ -40,22 +40,22 @@
       <item-icon :icon="it" :key="it" v-for="it in ['merge']"></item-icon>
       <div class="ve-item-separator"></div>
       <dropdown class="ve-item" width="60px">
-        <icon :name="styleAttrs.align" :style="{width: '18px'}" slot="title"></icon>
+        <icon :name="`align-${styleAttrs.align}`" :style="{width: '18px'}" slot="title"></icon>
         <div class="ve-menu vertical">
-          <item-icon v-for="align in ['align-left', 'align-center', 'align-right']"
+          <item-icon v-for="align in ['left', 'center', 'right']"
             style="text-align: center;"
-            :icon="align"
+            :icon="`align-${align}`"
             :key="align"
             @click="selectedHandler('align', align)">
           </item-icon>
         </div>
       </dropdown>
       <dropdown class="ve-item" width="60px">
-        <icon :name="styleAttrs.valign" :style="{width: '18px'}" slot="title"></icon>
+        <icon :name="`valign-${styleAttrs.valign}`" :style="{width: '18px'}" slot="title"></icon>
         <div class="ve-menu vertical">
-          <item-icon v-for="valign in ['valign-top', 'valign-middle', 'valign-bottom']"
+          <item-icon v-for="valign in ['top', 'middle', 'bottom']"
             style="text-align: center;"
-            :icon="valign"
+            :icon="`valign-${valign}`"
             :key="valign"
             @click="selectedHandler('valign', valign)">
           </item-icon>
@@ -63,13 +63,13 @@
       </dropdown>
       <item-icon :icon="it" :key="it" v-for="it in ['textwrap']"></item-icon>
       <div class="ve-item-separator"></div>
-      <item-icon :icon="it" :key="it" v-for="it in ['autofilter']"></item-icon>
+      <!-- <item-icon :icon="it" :key="it" v-for="it in ['autofilter']"></item-icon> -->
       <dropdown class="ve-item" width="160px">
         <icon name="formula" :style="{width: '18px'}" slot="title"></icon>
         <div class="ve-menu vertical">
           <item-icon v-for="formula in formulas"
             :key="formula.key"
-            @click="selectedHandler('formula', formula)">
+            @click="selectedHandler('formula', formula.key)">
             {{ formula.key }} {{formula.title}}
           </item-icon>
         </div>
@@ -90,12 +90,15 @@ export default {
     fonts: { type: Array, default: () => [] },
     formulas: { type: Array, default: () => [] },
     styleAttrs: { type: Object, default: () => {} }
-    // font: { type: Strirng },
-    // fontSize: { type: Number },
-    // color: { type: String },
-    // backgroundColor: { type: String }
   },
-
+  computed: {
+    fontTitle () {
+      return this.fonts.filter(f => f.key === this.styleAttrs.font)[0].title
+    },
+    formatTitle () {
+      return this.formats.filter(f => f.key === this.styleAttrs.format)[0].title
+    }
+  },
   methods: {
     selectedColorHandler (color) {
       this.selectedHandler('color', color)
@@ -105,6 +108,7 @@ export default {
     },
     selectedHandler (key, v) {
       this.styleAttrs[key] = v
+      this.$emit('change', this.styleAttrs)
     }
   }
 }

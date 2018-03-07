@@ -6,6 +6,7 @@
         :fonts="fonts"
         :formulas="formulas"
         :styleAttrs="toolbar"
+        @change="changeToolbarHandler"
         v-if="toolbar"></excel-toolbar>
       <excel-editor-bar
         :cell="editorBar.cell"
@@ -57,10 +58,11 @@
               :height="row.height"
               @mouseover="rowColMouseOverHandler('row', rindex, $event)">{{rindex + 1}}</td>
             <td v-for="(col, cindex) in data.cols" :key="col.index" :ref="`cell_${rindex}_${cindex}`"
+              :style="data[rindex] && data[rindex][cindex] && data[rindex][cindex].style"
               :row-index="rindex" :col-index="cindex" type="cell"
               @dblclick.left.stop="cellDblclickHandler(rindex, cindex, $event)"
               @mousedown.left="cellMousedownHandler(rindex, cindex, $event)">
-              {{ data[rindex] && data[rindex][cindex] && data[rindex][cindex].text || '' }}
+              {{ data[rindex] && data[rindex][cindex] && data[rindex][cindex].text }}
             </td>
           </tr>
         </tbody>
@@ -125,14 +127,14 @@ export default {
       rowResizer: null,
       colResizer: null,
       toolbar: {
-        font: this.fonts[0],
-        format: this.formats[0],
+        font: this.fonts[0].key,
+        format: this.formats[0].key,
         fontSize: 10,
         color: '#666',
         backgroundColor: '#fff',
-        align: 'align-left',
-        valign: 'valign-middle',
-        formula: this.formulas[0]
+        align: 'left',
+        valign: 'middle',
+        formula: this.formulas[0].key
       }
     }
   },
@@ -174,15 +176,22 @@ export default {
       if (!evt.shiftKey) {
         this.editorBar = {cell: `${this.data.cols[col].index}${row + 1}`, value: this.getEditValue(row, col)}
       }
+      Object.assign(this.toolbar, this.data[row][col] || {})
     },
-    changeFormatHandler (format) {
-      this.toolbar.format = format
-    },
-    changeFontHandler (font) {
-      this.toolbar.font = font
-    },
-    changeFontSizeHandler (fontSize) {
-      this.toolbar.fontSize = fontSize
+    changeToolbarHandler (styleAttrs) {
+      // this.data[row][col]
+      const style = {}
+      if (styleAttrs.font !== fonts[0].key) style['font-family'] = styleAttrs.font
+      if (styleAttrs.fontSize !== 10) style['font-size'] = `${styleAttrs.fontSize}px`
+      if (styleAttrs.color !== '#666') style['color'] = styleAttrs.color
+      if (styleAttrs.backgroundColor !== '#fff') style['background-color'] = styleAttrs.backgroundColor
+      if (styleAttrs.align !== 'left') style['text-align'] = styleAttrs.align
+      if (styleAttrs.valign !== 'middle') style['vertical-align'] = styleAttrs.valign
+      console.log(style)
+      this.$refs.eborder.cellForEach((row, col) => {
+        console.log(row, col, style)
+        this.$set(this.data[row][col], 'style', style)
+      })
     },
     getEditValue (row, col) {
       this.data[row] = this.data[row] || {}

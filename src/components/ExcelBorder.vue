@@ -4,6 +4,8 @@
     <div class="ve-border" :style="{background: color, left: `${left + width - 2}px`, top: `${top}px`, height: `${height - 2}px`, width: '2px'}"></div>
     <div class="ve-border" :style="{background: color, left: `${left}px`, top: `${top + height - 2}px`, width: `${width - 2}px`, height: '2px'}"></div>
     <div class="ve-border" :style="{background: color, left: `${left}px`, top: `${top}px`, height: `${height - 2}px`, width: '2px'}"></div>
+    <div class="ve-area-background"
+      :style="{background: 'rgba(75, 137, 255, 0.03)', left: `${left}px`, top: `${top}px`, width: `${width - 2}px`, height: `${height - 2}px`}"></div>
     <div class="corner" :style="{background: color, left: `${left + width - 5}px`, top: `${top + height - 5}px`}"></div>
   </div>
 </template>
@@ -79,11 +81,18 @@ export default {
         $refs[`row_${i}`][0].className = ''
         this.colActives.forEach(j => {
           $refs[`col_h${j}`][0].className = ''
-          $refs[`cell_${i}_${j}`][0].className = ''
+          // $refs[`cell_${i}_${j}`][0].className = ''
         })
       })
       this.rowActives = []
       this.colActives = []
+    },
+    cellForEach (callback) {
+      this.rowActives.forEach(i => {
+        this.colActives.forEach(j => {
+          callback(i, j)
+        })
+      })
     },
     selectAreaOffset () {
       const { startAttrs, endAttrs } = this
@@ -133,11 +142,11 @@ export default {
       }
 
       // background
-      this.rowActives.forEach(i => {
-        this.colActives.forEach(j => {
-          $refs[`cell_${i}_${j}`][0].className = 'active'
-        })
-      })
+      // this.rowActives.forEach(i => {
+      //   this.colActives.forEach(j => {
+      //     $refs[`cell_${i}_${j}`][0].className = 'active'
+      //   })
+      // })
 
       // console.log(top, left, height, width)
       Object.assign(this, {top, left, height, width})

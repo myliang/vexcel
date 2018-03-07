@@ -1,8 +1,11 @@
 <template>
-  <div @click="clickHandler" class="ve-dropdown" ref="dropdown" v-clickoutside="awayHandler">
+  <div class="ve-dropdown" ref="dropdown" v-clickoutside="awayHandler">
     <div class="ve-dropdown-header">
-      <slot name="title">{{ title }}</slot>
-      <icon name="arrow-down"/>
+      <div class="ve-dropdown-title" v-if="title">{{ title }}</div>
+      <slot name="title"></slot>
+      <div class="ve-dropdown-icon" @click="clickHandler">
+        <icon name="arrow-down"/>
+      </div>
     </div>
     <div class="ve-dropdown-content" :style="{width: width}" v-if="visable" @click.stop="awayHandler">
       <slot></slot>
