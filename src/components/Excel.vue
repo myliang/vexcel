@@ -95,7 +95,7 @@ import ExcelEditor from './ExcelEditor'
 import ExcelResizer from './ExcelResizer'
 import ExcelEditorBar from './ExcelEditorBar'
 import ExcelToolbar from './ExcelToolbar'
-import { defaultCols, formats, fonts, formulas, defaultCellAttrs, cellStyle } from './settings.js'
+import { defaultCols, formats, fonts, formulas, defaultCellAttrs, cellStyle, compareStyleAttrs } from './settings.js'
 
 export default {
   name: 'v-excel',
@@ -134,7 +134,8 @@ export default {
       pborderTarget: null,
       rowResizer: null,
       colResizer: null,
-      cellAttrs: Object.assign({}, defaultCellAttrs)
+      cellAttrs: Object.assign({}, defaultCellAttrs),
+      selectedBox: null
     }
   },
   mounted () {
@@ -180,22 +181,38 @@ export default {
       Object.assign(this.cellAttrs, defaultCellAttrs, this.value[row][col])
     },
     changeBorderHandler (rows, cols) {
+      // console.log('border.change....')
       // if paint format
-      // const cellStyle = this.$refs.toolbar.getCopyCellStyle()
-      // if (cellStyle !== null) {
-      //   this.changeToolbarHandler(cellStyle)
-      //   cellStyle.forEach(({key, v, isDefault}) => {
-      //     this.cellAttrs[key] = v
-      //   })
-      // }
+      if (this.selectedBox !== null) {
+        const { rows, cols } = this.selectedBox
+        this.$refs.eborder.cellForEach((row, rowIndex, col, colIndex) => {
+          let cell = this.getDataRowCol(row, col)
+          const copyRow = rows[rowIndex % rows.length]
+          const copyCol = cols[colIndex % cols.length]
+          // console.log('copy: ', copyRow, copyCol)
+          compareStyleAttrs(this.value[copyRow][copyCol], (k, v, isDefault) => {
+            if (isDefault) {
+              this.$delete(cell, k)
+            } else {
+              this.$set(cell, k, v)
+            }
+          })
+          // const v = Object.assign({}, this.value[copyRow][copyCol], {text: cell.text, formula: cell.formula})
+          // this.$set(this.value[row], col, v)
+        })
+        this.$refs.toolbar.clearPaintFormatActive()
+        this.selectedBox = null
+      }
     },
     changePaintHandler (isCopy) {
       if (isCopy) {
-        //
+        this.selectedBox = this.$refs.eborder.getActivies()
+      } else {
+        this.selectedBox = null
       }
     },
     changeToolbarHandler (attrs) {
-      this.$refs.eborder.cellForEach((row, col) => {
+      this.$refs.eborder.cellForEach((row, rowIndex, col, colIndex) => {
         // console.log('row: ', row, ', col:', col)
         let cell = this.getDataRowCol(row, col)
         attrs.forEach(({key, v, isDefault}) => {

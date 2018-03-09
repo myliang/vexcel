@@ -74,6 +74,14 @@ const filterStyleAttrs = (attrs) => {
   return style
 }
 
+const compareStyleAttrs = (attrs, cb) => {
+  Object.keys(defaultCellAttrs).forEach(key => {
+    if (key !== 'formula') {
+      cb(key, attrs[key], attrs[key] === defaultCellAttrs[key])
+    }
+  })
+}
+
 const defaultCols = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z']
 
 export {
@@ -83,5 +91,6 @@ export {
   formulas,
   defaultCellAttrs,
   cellStyle,
-  filterStyleAttrs
+  filterStyleAttrs,
+  compareStyleAttrs
 }

@@ -60,8 +60,6 @@ export default {
           $refs[`col_h${this.col}`][0].className = 'active'
           this.colActives.push(this.col)
           this.rowActives.push(this.row)
-
-          this.change()
         }
       }
     },
@@ -70,11 +68,11 @@ export default {
       if (evt.buttons === 1 && evt.target.getAttribute('type') === 'cell') {
         this.endAttrs = getAttrs(evt.target)
         this.selectAreaOffset()
-        this.change()
       }
     },
     mouseupHandler (evt) {
       window.removeEventListener('mousemove', this.mousemoveHandler)
+      this.change()
     },
     reload () {
       this.selectAreaOffset()
@@ -94,10 +92,14 @@ export default {
       this.rowActives = []
       this.colActives = []
     },
+    getActivies () {
+      const { rowActives, colActives } = this
+      return {rows: rowActives, cols: colActives}
+    },
     cellForEach (callback) {
-      this.rowActives.forEach(i => {
-        this.colActives.forEach(j => {
-          callback(i, j)
+      this.rowActives.forEach((i, iindex) => {
+        this.colActives.forEach((j, jindex) => {
+          callback(i, iindex, j, jindex)
         })
       })
     },

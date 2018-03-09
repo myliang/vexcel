@@ -124,7 +124,11 @@ export default {
       this.$emit('change', attrs)
     },
     copyFormatHandler () {
-      this.$emit('change-paint', !this.paintFormatActive)
+      this.paintFormatActive = !this.paintFormatActive
+      this.$emit('change-paint', this.paintFormatActive)
+    },
+    clearPaintFormatActive () {
+      this.paintFormatActive = false
     },
     selectedColorHandler (color) {
       this.selectedHandler('color', color)
