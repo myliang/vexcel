@@ -1,9 +1,9 @@
 <template>
   <div class="ve-borders">
-    <div class="ve-border" :style="{background: color, left: `${left}px`, top: `${top}px`, width: `${width - 2}px`, height: '2px'}"></div>
-    <div class="ve-border" :style="{background: color, left: `${left + width - 2}px`, top: `${top}px`, height: `${height - 2}px`, width: '2px'}"></div>
-    <div class="ve-border" :style="{background: color, left: `${left}px`, top: `${top + height - 2}px`, width: `${width - 2}px`, height: '2px'}"></div>
-    <div class="ve-border" :style="{background: color, left: `${left}px`, top: `${top}px`, height: `${height - 2}px`, width: '2px'}"></div>
+    <div class="ve-border" :style="{background: color, left: `${left - 1}px`, top: `${top - 1}px`, width: `${width + 1}px`, height: '2px'}"></div>
+    <div class="ve-border" :style="{background: color, left: `${left + width - 1}px`, top: `${top - 1}px`, height: `${height}px`, width: '2px'}"></div>
+    <div class="ve-border" :style="{background: color, left: `${left - 1}px`, top: `${top + height - 1}px`, width: `${width}px`, height: '2px'}"></div>
+    <div class="ve-border" :style="{background: color, left: `${left - 1}px`, top: `${top - 1}px`, height: `${height}px`, width: '2px'}"></div>
     <div class="ve-area-background"
       :style="{background: 'rgba(75, 137, 255, 0.03)', left: `${left}px`, top: `${top}px`, width: `${width - 2}px`, height: `${height - 2}px`}"></div>
     <div class="corner" :style="{background: color, left: `${left + width - 5}px`, top: `${top + height - 5}px`}"></div>
@@ -41,12 +41,13 @@ export default {
       // console.log(evt.target.getAttribute('type'))
       // console.log(evt.type, evt.detail, evt.buttons)
       if (evt.detail === 1 && evt.buttons === 1 && evt.target.getAttribute('type') === 'cell') {
-        console.log(evt.shiftKey)
+        // console.log(evt.shiftKey)
         if (evt.buttons === 1) {
           if (evt.shiftKey) {
             this.endAttrs = getAttrs(evt.target)
             // console.log(this.startAttrs, this.endAttrs)
             this.selectAreaOffset()
+            this.change()
             return
           }
 
@@ -59,6 +60,8 @@ export default {
           $refs[`col_h${this.col}`][0].className = 'active'
           this.colActives.push(this.col)
           this.rowActives.push(this.row)
+
+          this.change()
         }
       }
     },
@@ -67,6 +70,7 @@ export default {
       if (evt.buttons === 1 && evt.target.getAttribute('type') === 'cell') {
         this.endAttrs = getAttrs(evt.target)
         this.selectAreaOffset()
+        this.change()
       }
     },
     mouseupHandler (evt) {
@@ -74,6 +78,9 @@ export default {
     },
     reload () {
       this.selectAreaOffset()
+    },
+    change () {
+      this.$emit('change', this.rowActives, this.colActives)
     },
     clearActives () {
       const { $refs } = this.$parent

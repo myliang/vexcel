@@ -1,7 +1,11 @@
 <template>
   <div class="ve-toolbar">
     <div class="ve-menu horizontal">
-      <item-icon :icon="it" :key="it" v-for="it in ['undo', 'redo', 'print', 'paintformat', 'clearformat']"></item-icon>
+      <item-icon icon="undo" disabled></item-icon>
+      <item-icon icon="redo" disabled></item-icon>
+      <!-- <item-icon icon="print" @click="printHandler"></item-icon> -->
+      <item-icon icon="paintformat" :active="paintFormatActive" @click="copyFormatHandler"></item-icon>
+      <item-icon icon="clearformat" @click="clearFormatHandler"></item-icon>
       <dropdown :title="formatTitle" class="ve-item" width="250px">
         <div class="ve-menu vertical">
           <item-icon v-for="(format, index) in formats" :key="index" @click="selectedHandler('format', format.key)">
@@ -18,7 +22,7 @@
           </item-icon>
         </div>
       </dropdown>
-      <dropdown :title="`${styleAttrs.fontSize}`" class="ve-item" width="70px">
+      <dropdown :title="`${attrs.fontSize}`" class="ve-item" width="70px">
         <div class="ve-menu vertical">
           <item-icon v-for="fontSize in [6, 8, 10, 12, 14, 16, 18, 20, 22, 24, 30, 36]"
             :key="fontSize" @click="selectedHandler('fontSize', fontSize)" style="text-align: center;">
@@ -27,20 +31,22 @@
         </div>
       </dropdown>
       <div class="ve-item-separator"></div>
-      <item-icon :icon="it" :key="it" v-for="it in ['bold', 'italic', 'underline', 'strikethrough']"></item-icon>
+      <item-icon icon="bold" :active="attrs.fontWeight === 'bold'" @click="radioHandler('fontWeight', 'bold')"></item-icon>
+      <item-icon icon="italic" :active="attrs.fontStyle === 'italic'" @click="radioHandler('fontStyle', 'italic')"></item-icon>
+      <item-icon icon="underline" :active="attrs.textDecoration === 'underline'" @click="radioHandler('textDecoration', 'underline')"></item-icon>
       <dropdown class="ve-item">
-        <icon name="text-color" :style="{'border-bottom': `3px solid ${styleAttrs.color}`, width: '18px', height: '16px'}" slot="title"></icon>
+        <icon name="text-color" :style="{'border-bottom': `3px solid ${attrs.color}`, width: '18px', height: '16px'}" slot="title"></icon>
         <color-panel @change="selectedColorHandler"></color-panel>
       </dropdown>
       <div class="ve-item-separator"></div>
       <dropdown class="ve-item">
-        <icon name="cell-color" :style="{'border-bottom': `3px solid ${styleAttrs.backgroundColor}`, width: '18px', height: '16px'}" slot="title"></icon>
+        <icon name="cell-color" :style="{'border-bottom': `3px solid ${attrs.backgroundColor}`, width: '18px', height: '16px'}" slot="title"></icon>
         <color-panel @change="selectedBackgroundColorHandler"></color-panel>
       </dropdown>
-      <item-icon :icon="it" :key="it" v-for="it in ['merge']"></item-icon>
+      <item-icon icon="merge"></item-icon>
       <div class="ve-item-separator"></div>
       <dropdown class="ve-item" width="60px">
-        <icon :name="`align-${styleAttrs.align}`" :style="{width: '18px'}" slot="title"></icon>
+        <icon :name="`align-${attrs.align}`" :style="{width: '18px'}" slot="title"></icon>
         <div class="ve-menu vertical">
           <item-icon v-for="align in ['left', 'center', 'right']"
             style="text-align: center;"
@@ -51,7 +57,7 @@
         </div>
       </dropdown>
       <dropdown class="ve-item" width="60px">
-        <icon :name="`valign-${styleAttrs.valign}`" :style="{width: '18px'}" slot="title"></icon>
+        <icon :name="`valign-${attrs.valign}`" :style="{width: '18px'}" slot="title"></icon>
         <div class="ve-menu vertical">
           <item-icon v-for="valign in ['top', 'middle', 'bottom']"
             style="text-align: center;"
@@ -61,7 +67,7 @@
           </item-icon>
         </div>
       </dropdown>
-      <item-icon :icon="it" :key="it" v-for="it in ['textwrap']"></item-icon>
+      <item-icon icon="textwrap" :active="attrs.wordWrap === 'break-word'" @click="radioHandler('wordWrap', 'break-word')"></item-icon>
       <div class="ve-item-separator"></div>
       <!-- <item-icon :icon="it" :key="it" v-for="it in ['autofilter']"></item-icon> -->
       <dropdown class="ve-item" width="160px">
@@ -78,10 +84,11 @@
   </div>
 </template>
 <script>
-import ItemIcon from './ItemIcon.vue'
-import Dropdown from './Dropdown.vue'
-import Icon from './Icon.vue'
-import ColorPanel from './ColorPanel.vue'
+import ItemIcon from './base/ItemIcon.vue'
+import Dropdown from './base/Dropdown.vue'
+import Icon from './base/Icon.vue'
+import ColorPanel from './base/ColorPanel.vue'
+import { defaultCellAttrs } from './settings.js'
 export default {
   name: 'excel-toolbar',
   components: {ItemIcon, Dropdown, Icon, ColorPanel},
@@ -89,17 +96,36 @@ export default {
     formats: { type: Array, default: () => [] },
     fonts: { type: Array, default: () => [] },
     formulas: { type: Array, default: () => [] },
-    styleAttrs: { type: Object, default: () => {} }
+    attrs: { type: Object, default: () => {} }
+  },
+  data () {
+    return {
+      paintFormatActive: false
+    }
   },
   computed: {
     fontTitle () {
-      return this.fonts.filter(f => f.key === this.styleAttrs.font)[0].title
+      console.log(this.attrs)
+      return this.fonts.filter(f => f.key === (this.attrs.font))[0].title
     },
     formatTitle () {
-      return this.formats.filter(f => f.key === this.styleAttrs.format)[0].title
+      return this.formats.filter(f => f.key === (this.attrs.format))[0].title
     }
   },
   methods: {
+    radioHandler (key, v) {
+      this.selectedHandler(key, this.attrs[key] === v ? defaultCellAttrs[key] : v)
+    },
+    clearFormatHandler () {
+      const attrs = Object.keys(defaultCellAttrs).map(key => {
+        this.attrs[key] = defaultCellAttrs[key]
+        return {key, v: defaultCellAttrs[key], isDefault: true}
+      })
+      this.$emit('change', attrs)
+    },
+    copyFormatHandler () {
+      this.$emit('change-paint', !this.paintFormatActive)
+    },
     selectedColorHandler (color) {
       this.selectedHandler('color', color)
     },
@@ -107,8 +133,11 @@ export default {
       this.selectedHandler('backgroundColor', color)
     },
     selectedHandler (key, v) {
-      this.styleAttrs[key] = v
-      this.$emit('change', this.styleAttrs)
+      this.attrs[key] = v
+      this.$emit('change', [{key, v, isDefault: v === defaultCellAttrs[key]}])
+    },
+    printHandler () {
+      window.print()
     }
   }
 }

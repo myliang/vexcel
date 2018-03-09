@@ -5,9 +5,11 @@
         :formats="formats"
         :fonts="fonts"
         :formulas="formulas"
-        :styleAttrs="toolbar"
+        :attrs="cellAttrs"
         @change="changeToolbarHandler"
-        v-if="toolbar"></excel-toolbar>
+        @change-paint="changePaintHandler"
+        ref="toolbar"
+        v-if="cellAttrs"></excel-toolbar>
       <excel-editor-bar
         :cell="editorBar.cell"
         v-model="editorBar.value"
@@ -19,7 +21,7 @@
         <colgroup>
           <col width="60"/>
           <col
-            v-for="(col, index) in data.cols"
+            v-for="(col, index) in value.cols"
             :width="col.width"
             :key="col.index"
             :ref="`col_${index}`"/>
@@ -27,7 +29,7 @@
         <thead>
           <tr>
             <th>&nbsp;</th>
-            <th v-for="(col, index) in data.cols"
+            <th v-for="(col, index) in value.cols"
               :key="col.index"
               :ref="`col_h${index}`"
               @mouseover="rowColMouseOverHandler('col', index, $event)">{{col.index}}</th>
@@ -47,32 +49,35 @@
         <colgroup>
           <col width="60"/>
           <col
-            v-for="(col, index) in data.cols"
+            v-for="(col, index) in value.cols"
             :width="col.width"
             :key="col.index"
             :ref="`col_${index}`"/>
         </colgroup>
         <tbody>
-          <tr v-for="(row, rindex) in data.rows" :key="rindex">
+          <tr v-for="(row, rindex) in value.rows" :key="rindex">
             <td :ref="`row_${rindex}`"
               :height="row.height"
               @mouseover="rowColMouseOverHandler('row', rindex, $event)">{{rindex + 1}}</td>
-            <td v-for="(col, cindex) in data.cols" :key="col.index" :ref="`cell_${rindex}_${cindex}`"
-              :style="data[rindex] && data[rindex][cindex] && data[rindex][cindex].style"
+            <td v-for="(col, cindex) in value.cols" :key="col.index" :ref="`cell_${rindex}_${cindex}`"
+              :style="value[rindex] && value[rindex][cindex] && cellStyle(value[rindex][cindex])"
               :row-index="rindex" :col-index="cindex" type="cell"
               @dblclick.left.stop="cellDblclickHandler(rindex, cindex, $event)"
               @mousedown.left="cellMousedownHandler(rindex, cindex, $event)">
-              {{ data[rindex] && data[rindex][cindex] && data[rindex][cindex].text }}
+              {{ value[rindex] && value[rindex][cindex] && value[rindex][cindex].text }}
             </td>
           </tr>
         </tbody>
       </table>
-      <excel-border ref="eborder">
+      <excel-border ref="eborder" @change="changeBorderHandler">
       </excel-border>
+      <excel-paint-border
+        :target="pborderTarget"/>
       <excel-editor
         :target="editor.target"
         v-model="editor.value"
-        v-if="editor && editor.target">
+        v-if="editor && editor.target"
+        ref="editor">
       </excel-editor>
       <excel-resizer
         :target="rowResizer.target"
@@ -85,16 +90,18 @@
 </template>
 <script>
 import ExcelBorder from './ExcelBorder'
+import ExcelPaintBorder from './ExcelPaintBorder'
 import ExcelEditor from './ExcelEditor'
 import ExcelResizer from './ExcelResizer'
 import ExcelEditorBar from './ExcelEditorBar'
 import ExcelToolbar from './ExcelToolbar'
-import { defaultCols, formats, fonts, formulas } from './settings.js'
+import { defaultCols, formats, fonts, formulas, defaultCellAttrs, cellStyle } from './settings.js'
 
 export default {
   name: 'v-excel',
   components: {
     ExcelBorder,
+    ExcelPaintBorder,
     ExcelEditor,
     ExcelResizer,
     ExcelEditorBar,
@@ -104,38 +111,30 @@ export default {
     formats: { type: Array, default: () => formats },
     fonts: { type: Array, default: () => fonts },
     formulas: { type: Array, default: () => formulas },
-    data: { type: Object, default: () => { return {} } } // [[{text: '', type: '', style: ''}]..]
+    value: { type: Object, default: () => { return {} } } // [[{text: '', type: '', style: ''}]..]
   },
   data () {
-    const { data } = this
+    const { value } = this
     const defaultColWidth = 100
-    if (data.cols === undefined) {
-      data.cols = defaultCols.map((col, index) => {
+    if (value.cols === undefined) {
+      value.cols = defaultCols.map((col, index) => {
         return {width: defaultColWidth, index: col}
       })
     }
-    if (data.rows === undefined) {
-      const max = (((Object.keys(data).length - 1) / defaultColWidth) + 1) * 100
-      data.rows = []
+    if (value.rows === undefined) {
+      const max = (((Object.keys(value).length - 1) / defaultColWidth) + 1) * 100
+      value.rows = []
       for (let i = 0; i < max; i++) {
-        data.rows[i] = {height: 22}
+        value.rows[i] = {height: 22}
       }
     }
     return {
       editor: {},
       editorBar: {},
+      pborderTarget: null,
       rowResizer: null,
       colResizer: null,
-      toolbar: {
-        font: this.fonts[0].key,
-        format: this.formats[0].key,
-        fontSize: 10,
-        color: '#666',
-        backgroundColor: '#fff',
-        align: 'left',
-        valign: 'middle',
-        formula: this.formulas[0].key
-      }
+      cellAttrs: Object.assign({}, defaultCellAttrs)
     }
   },
   mounted () {
@@ -149,24 +148,26 @@ export default {
       }
     },
     colChangeResizerHandler (index, distance) {
-      const { data } = this
-      const w = data.cols[index].width + distance
+      const { value } = this
+      const w = value.cols[index].width + distance
       if (w <= 50) return
-      data.cols[index].width = w
+      value.cols[index].width = w
       this.$refs[`col_${index}`].forEach(c => {
         c.width = w
       })
       this.$refs.eborder.reload()
+      this.$refs.editor && this.$refs.editor.reload()
     },
     rowChangeResizerHandler (index, distance) {
-      const { data } = this
-      const h = data.rows[index].height + distance
+      const { value } = this
+      const h = value.rows[index].height + distance
       if (h <= 22) return
-      data.rows[index].height = h
+      value.rows[index].height = h
       this.$refs[`row_${index}`].forEach(c => {
         c.height = h
       })
       this.$refs.eborder.reload()
+      this.$refs.editor && this.$refs.editor.reload()
     },
     cellDblclickHandler (row, col, evt) {
       this.editor = {target: evt.target, value: this.getEditValue(row, col)}
@@ -174,30 +175,50 @@ export default {
     cellMousedownHandler (row, col, evt) {
       this.editor = null
       if (!evt.shiftKey) {
-        this.editorBar = {cell: `${this.data.cols[col].index}${row + 1}`, value: this.getEditValue(row, col)}
+        this.editorBar = {cell: `${this.value.cols[col].index}${row + 1}`, value: this.getEditValue(row, col)}
       }
-      Object.assign(this.toolbar, this.data[row][col] || {})
+      Object.assign(this.cellAttrs, defaultCellAttrs, this.value[row][col])
     },
-    changeToolbarHandler (styleAttrs) {
-      // this.data[row][col]
-      const style = {}
-      if (styleAttrs.font !== fonts[0].key) style['font-family'] = styleAttrs.font
-      if (styleAttrs.fontSize !== 10) style['font-size'] = `${styleAttrs.fontSize}px`
-      if (styleAttrs.color !== '#666') style['color'] = styleAttrs.color
-      if (styleAttrs.backgroundColor !== '#fff') style['background-color'] = styleAttrs.backgroundColor
-      if (styleAttrs.align !== 'left') style['text-align'] = styleAttrs.align
-      if (styleAttrs.valign !== 'middle') style['vertical-align'] = styleAttrs.valign
-      console.log(style)
+    changeBorderHandler (rows, cols) {
+      // if paint format
+      // const cellStyle = this.$refs.toolbar.getCopyCellStyle()
+      // if (cellStyle !== null) {
+      //   this.changeToolbarHandler(cellStyle)
+      //   cellStyle.forEach(({key, v, isDefault}) => {
+      //     this.cellAttrs[key] = v
+      //   })
+      // }
+    },
+    changePaintHandler (isCopy) {
+      if (isCopy) {
+        //
+      }
+    },
+    changeToolbarHandler (attrs) {
       this.$refs.eborder.cellForEach((row, col) => {
-        console.log(row, col, style)
-        this.$set(this.data[row][col], 'style', style)
+        // console.log('row: ', row, ', col:', col)
+        let cell = this.getDataRowCol(row, col)
+        attrs.forEach(({key, v, isDefault}) => {
+          // console.log('key: ', cell, key, v, isDefault)
+          if (isDefault) {
+            this.$delete(cell, key)
+          } else {
+            // console.log(':::::::::', cell, key, v)
+            this.$set(cell, key, v)
+          }
+        })
       })
     },
     getEditValue (row, col) {
-      this.data[row] = this.data[row] || {}
-      this.data[row][col] = this.data[row][col] || {text: ''}
-      return this.data[row][col]
-    }
+      return this.getDataRowCol(row, col)
+    },
+    getDataRowCol (row, col) {
+      this.value[row] = this.value[row] || {}
+      this.value[row][col] = this.value[row][col] || {text: ''}
+      return this.value[row][col]
+    },
+    cellStyle
   }
 }
+
 </script>

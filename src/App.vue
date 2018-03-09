@@ -1,6 +1,6 @@
 <template>
   <div id="app">
-    <v-excel></v-excel>
+    <v-excel v-model="data"></v-excel>
   </div>
 </template>
 
@@ -11,6 +11,11 @@ export default {
   name: 'App',
   components: {
     VExcel
+  },
+  data () {
+    return {
+      data: {}
+    }
   },
   methods: {
     mousedown (evt) {

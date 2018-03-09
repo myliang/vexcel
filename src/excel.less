@@ -64,13 +64,11 @@
   textarea {
     box-sizing: content-box;
     border: none;
-    padding: 0 2px 0;
+    padding: 0 3px;
     outline-width: 0;
     resize: none;
     text-align: start;
-    // min-width: 100px;
     max-width: 500px;
-    line-height: 19px;
     overflow-y: hidden;
     font-family: inherit;
     font-size: inherit;
@@ -118,6 +116,12 @@
     right: -6px;
     // z-index: 12;
   }
+}
+
+.ve-paint-border {
+  position: absolute;
+  pointer-events: none;
+  border: 2px dashed rgb(75, 137, 255);
 }
 
 .ve-bars {
@@ -227,11 +231,16 @@
     // font-weight: bold;
     cursor: default;
 
-    &:not(.separator):hover {
+    &.disabled {
+      pointer-events: none;
+      opacity: 0.5;
+    }
+
+    &:not(.separator):hover, &.active {
       background: rgba(0, 0, 0, .08);
       // color: rgba(0, 0, 0, 0.7);
       .ve-icon {
-        opacity: 0.8;
+        opacity: 0.7;
       }
 
       .ve-dropdown-icon {
@@ -310,7 +319,7 @@
 .ve-icon {
   height: 18px;
   width: 18px;
-  margin: 1px 4px 2px 3px;
+  margin: 0px 4px 2px 3px;
   direction: ltr;
   text-align: left;
   user-select: none;

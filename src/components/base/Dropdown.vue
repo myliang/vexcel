@@ -13,7 +13,7 @@
   </div>
 </template>
 <script>
-import clickoutside from '../directives/clickoutside'
+import clickoutside from '../../directives/clickoutside'
 import Icon from './Icon.vue'
 export default {
   name: 'dropdown',

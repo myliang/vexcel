@@ -1,5 +1,5 @@
 <template>
-  <div class="ve-item" @click="clickHandler">
+  <div :class="['ve-item', {'active': active}, {'disabled': disabled}]" @click="clickHandler">
     <icon :name="icon" v-if="icon"/>
     <slot></slot>
   </div>
@@ -10,7 +10,9 @@ export default {
   name: 'menu-item-icon',
   components: {Icon},
   props: {
-    icon: { type: String }
+    icon: { type: String },
+    active: { type: Boolean, default: false },
+    disabled: { type: Boolean, default: false }
   },
   methods: {
     clickHandler (evt) {
