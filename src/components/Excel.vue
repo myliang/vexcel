@@ -144,7 +144,6 @@ export default {
     rowColMouseOverHandler (type, index, evt) {
       // mouse key left pressed
       if (evt.buttons !== 1) {
-        console.log(index)
         this[`${type}Resizer`] = {target: evt.target, index}
       }
     },
@@ -178,7 +177,12 @@ export default {
       if (!evt.shiftKey) {
         this.editorBar = {cell: `${this.value.cols[col].index}${row + 1}`, value: this.getEditValue(row, col)}
       }
-      Object.assign(this.cellAttrs, defaultCellAttrs, this.value[row][col])
+      // console.log('>>>attrs:', this.cellAttrs, this.value[row][col])
+      // paint
+      if (this.selectedBox === null) {
+        this.setDataCell(row, col)
+      }
+      // Object.assign(this.cellAttrs, defaultCellAttrs, this.value[row][col])
     },
     changeBorderHandler (rows, cols) {
       // console.log('border.change....')
@@ -189,7 +193,7 @@ export default {
           let cell = this.getDataRowCol(row, col)
           const copyRow = rows[rowIndex % rows.length]
           const copyCol = cols[colIndex % cols.length]
-          // console.log('copy: ', copyRow, copyCol)
+          console.log('copy: ', copyRow, copyCol, this.value[copyRow][copyCol])
           compareStyleAttrs(this.value[copyRow][copyCol], (k, v, isDefault) => {
             if (isDefault) {
               this.$delete(cell, k)
@@ -197,8 +201,6 @@ export default {
               this.$set(cell, k, v)
             }
           })
-          // const v = Object.assign({}, this.value[copyRow][copyCol], {text: cell.text, formula: cell.formula})
-          // this.$set(this.value[row], col, v)
         })
         this.$refs.toolbar.clearPaintFormatActive()
         this.selectedBox = null
@@ -228,6 +230,12 @@ export default {
     },
     getEditValue (row, col) {
       return this.getDataRowCol(row, col)
+    },
+    setDataCell (row, col) {
+      const cell = this.value[row][col]
+      Object.keys(defaultCellAttrs).forEach(attr => {
+        this.cellAttrs[attr] = cell[attr] || defaultCellAttrs[attr]
+      })
     },
     getDataRowCol (row, col) {
       this.value[row] = this.value[row] || {}

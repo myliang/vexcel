@@ -109,6 +109,7 @@ export default {
       return this.fonts.filter(f => f.key === (this.attrs.font))[0].title
     },
     formatTitle () {
+      // console.log('>>>', this.attrs)
       return this.formats.filter(f => f.key === (this.attrs.format))[0].title
     }
   },
