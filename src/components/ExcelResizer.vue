@@ -63,10 +63,12 @@ export default {
       }
     },
     mouseupHandler (evt) {
-      this.$emit('change', this.index, this.distance)
-      this.startEvent = null
-      this.lineVisable = false
-      this.distance = 0
+      if (this.startEvent !== null) {
+        this.$emit('change', this.index, this.distance)
+        this.startEvent = null
+        this.lineVisable = false
+        this.distance = 0
+      }
     },
     styleObject (target) {
       const { vertical } = this

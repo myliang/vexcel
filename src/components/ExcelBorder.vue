@@ -18,8 +18,8 @@ export default {
   data () {
     return {
       visable: false,
-      startAttrs: {},
-      endAttrs: {},
+      startTarget: null,
+      endTarget: null,
       left: 0,
       top: -1000,
       width: 0,
@@ -38,13 +38,14 @@ export default {
   },
   methods: {
     mousedownHandler (evt) {
+      // console.log('>>>>>>>>>>mousedonw')
       // console.log(evt.target.getAttribute('type'))
-      // console.log(evt.type, evt.detail, evt.buttons)
+      console.log(evt.type, evt.detail, evt.buttons)
       if (evt.detail === 1 && evt.buttons === 1 && evt.target.getAttribute('type') === 'cell') {
         // console.log(evt.shiftKey)
         if (evt.buttons === 1) {
           if (evt.shiftKey) {
-            this.endAttrs = getAttrs(evt.target)
+            this.endTarget = evt.target
             // console.log(this.startAttrs, this.endAttrs)
             this.selectAreaOffset()
             this.change()
@@ -52,8 +53,8 @@ export default {
           }
 
           this.clearActives()
-          const startAttrs = getAttrs(evt.target)
-          Object.assign(this, {startAttrs, endAttrs: startAttrs, ...startAttrs})
+          const attrs = getAttrs(evt.target)
+          Object.assign(this, {startTarget: evt.target, endTarget: evt.target, ...attrs})
           window.addEventListener('mousemove', this.mousemoveHandler)
           const { $refs } = this.$parent
           $refs[`row_${this.row}`][0].className = 'active'
@@ -64,9 +65,10 @@ export default {
       }
     },
     mousemoveHandler (evt) {
+      // console.log('>>>>>>>>>>move...')
       if (evt.target === this.target) return
       if (evt.buttons === 1 && evt.target.getAttribute('type') === 'cell') {
-        this.endAttrs = getAttrs(evt.target)
+        this.endTarget = evt.target
         this.selectAreaOffset()
       }
     },
@@ -75,6 +77,7 @@ export default {
       this.change()
     },
     reload () {
+      // console.log('reload...')
       this.selectAreaOffset()
     },
     change () {
@@ -104,7 +107,10 @@ export default {
       })
     },
     selectAreaOffset () {
-      const { startAttrs, endAttrs } = this
+      // console.log('selectareaoffset>>>>')
+      const { startTarget, endTarget } = this
+      const startAttrs = getAttrs(startTarget)
+      const endAttrs = getAttrs(endTarget)
       this.clearActives()
       const { $parent } = this
       const { $refs } = $parent
@@ -118,44 +124,41 @@ export default {
       let left = startAttrs.left
 
       const rowHeight = (s, e) => {
-        for (let i = s; i <= e; i++) {
-          // console.log($refs)
+        for (let i = s.row; i <= e.row; i++) {
+          // console.log('row>>', s)
           // this.rowActives[i] = true
           $refs[`row_${i}`][0].className = 'active'
           this.rowActives.push(i)
-          height += parseInt($refs[`row_${i}`][0].offsetHeight)
+          for (let j = 0; j < s.rowspan; j++) {
+            height += parseInt($refs[`row_${i + j}`][0].offsetHeight)
+          }
         }
       }
 
       const colWidth = (s, e) => {
-        for (let i = s; i <= e; i++) {
+        for (let i = s.col; i <= e.col; i++) {
           // col width
           // this.colActives[i] = true
           $refs[`col_h${i}`][0].className = 'active'
           this.colActives.push(i)
-          width += parseInt($refs[`col_${i}`][0].width)
+          for (let j = 0; j < s.colspan; j++) {
+            width += parseInt($refs[`col_${i + j}`][0].width)
+          }
         }
       }
 
       if (eoRow >= soRow) {
-        rowHeight(soRow, eoRow)
+        rowHeight(startAttrs, endAttrs)
       } else {
-        rowHeight(eoRow, soRow)
+        rowHeight(endAttrs, startAttrs)
         top = endAttrs.top
       }
       if (eoCol >= soCol) {
-        colWidth(soCol, eoCol)
+        colWidth(startAttrs, endAttrs)
       } else {
-        colWidth(eoCol, soCol)
+        colWidth(endAttrs, startAttrs)
         left = endAttrs.left
       }
-
-      // background
-      // this.rowActives.forEach(i => {
-      //   this.colActives.forEach(j => {
-      //     $refs[`cell_${i}_${j}`][0].className = 'active'
-      //   })
-      // })
 
       // console.log(top, left, height, width)
       Object.assign(this, {top, left, height, width})
@@ -168,6 +171,8 @@ const getAttrs = (target) => {
   return {
     row: parseInt(target.getAttribute('row-index')),
     col: parseInt(target.getAttribute('col-index')),
+    rowspan: parseInt(target.getAttribute('rowspan')),
+    colspan: parseInt(target.getAttribute('colspan')),
     left: offsetLeft,
     top: offsetTop,
     width: offsetWidth,

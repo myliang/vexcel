@@ -43,7 +43,7 @@
         <icon name="cell-color" :style="{'border-bottom': `3px solid ${attrs.backgroundColor}`, width: '18px', height: '16px'}" slot="title"></icon>
         <color-panel @change="selectedBackgroundColorHandler"></color-panel>
       </dropdown>
-      <item-icon icon="merge"></item-icon>
+      <item-icon icon="merge" :active="attrs.rowspan > 1 || attrs.colspan > 1" @click="mergeHandler"></item-icon>
       <div class="ve-item-separator"></div>
       <dropdown class="ve-item" width="60px">
         <icon :name="`align-${attrs.align}`" :style="{width: '18px'}" slot="title"></icon>
@@ -116,6 +116,9 @@ export default {
   methods: {
     radioHandler (key, v) {
       this.selectedHandler(key, this.attrs[key] === v ? defaultCellAttrs[key] : v)
+    },
+    mergeHandler () {
+      this.$emit('change-merge')
     },
     clearFormatHandler () {
       const attrs = Object.keys(defaultCellAttrs).map(key => {

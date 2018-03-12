@@ -8,6 +8,7 @@
         :attrs="cellAttrs"
         @change="changeToolbarHandler"
         @change-paint="changePaintHandler"
+        @change-merge="changeMergeHandler"
         ref="toolbar"
         v-if="cellAttrs"></excel-toolbar>
       <excel-editor-bar
@@ -60,6 +61,8 @@
               :height="row.height"
               @mouseover="rowColMouseOverHandler('row', rindex, $event)">{{rindex + 1}}</td>
             <td v-for="(col, cindex) in value.cols" :key="col.index" :ref="`cell_${rindex}_${cindex}`"
+              :rowspan="value[rindex] && value[rindex][cindex] && value[rindex][cindex].rowspan || 1"
+              :colspan="value[rindex] && value[rindex][cindex] && value[rindex][cindex].colspan || 1"
               :style="value[rindex] && value[rindex][cindex] && cellStyle(value[rindex][cindex])"
               :row-index="rindex" :col-index="cindex" type="cell"
               @dblclick.left.stop="cellDblclickHandler(rindex, cindex, $event)"
@@ -135,7 +138,8 @@ export default {
       rowResizer: null,
       colResizer: null,
       cellAttrs: Object.assign({}, defaultCellAttrs),
-      selectedBox: null
+      selectedBox: null,
+      current: null
     }
   },
   mounted () {
@@ -143,6 +147,7 @@ export default {
   methods: {
     rowColMouseOverHandler (type, index, evt) {
       // mouse key left pressed
+      // console.log('>>>>>>>>over')
       if (evt.buttons !== 1) {
         this[`${type}Resizer`] = {target: evt.target, index}
       }
@@ -177,12 +182,13 @@ export default {
       if (!evt.shiftKey) {
         this.editorBar = {cell: `${this.value.cols[col].index}${row + 1}`, value: this.getEditValue(row, col)}
       }
-      // console.log('>>>attrs:', this.cellAttrs, this.value[row][col])
+
       // paint
       if (this.selectedBox === null) {
-        this.setDataCell(row, col)
+        this.setCellAttrs(row, col)
       }
-      // Object.assign(this.cellAttrs, defaultCellAttrs, this.value[row][col])
+      // set current data cell
+      this.current = {row, col, cell: this.getDataRowCol(row, col)}
     },
     changeBorderHandler (rows, cols) {
       // console.log('border.change....')
@@ -213,6 +219,48 @@ export default {
         this.selectedBox = null
       }
     },
+    changeMergeHandler () {
+      // merge cell
+      const { current } = this
+      // console.log('merge...', current)
+      // 如果当前的单元格为合并单元格
+      if (current.cell.rowspan > 1 || current.cell.colspan > 1) {
+        this.$set(current.cell, 'rowspan', defaultCellAttrs.rowspan)
+        this.$set(current.cell, 'colspan', defaultCellAttrs.colspan)
+        // console.log('>><<<<<<<<<<,')
+        // 取消合并
+        for (let i = 0; i < current.cell.rowspan; i++) {
+          for (let j = 0; j < current.cell.colspan; j++) {
+            if (i > 0 || j > 0) {
+              // console.log(current.row, i, '>>>')
+              this.setDataRowCol(current.row + i, current.col + j, {text: '', invisable: false})
+              // this.$refs[`cell_${current.row + i}_${current.col + j}`][0].style.display = 'block'
+            }
+          }
+        }
+        this.setCellAttrs(current.row, current.col)
+      } else {
+        // 合并
+        let { rows, cols } = this.$refs.eborder.getActivies()
+        if (rows.length > 1 || cols.length > 1) {
+          rows.sort((a, b) => a - b)
+          cols.sort((a, b) => a - b)
+          let cell = this.getDataRowCol(rows[0], cols[0])
+          this.$set(cell, 'rowspan', rows.length)
+          this.$set(cell, 'colspan', cols.length)
+          for (let i = 0; i < rows.length; i++) {
+            for (let j = 0; j < cols.length; j++) {
+              if (i > 0 || j > 0) {
+                this.setDataRowCol(rows[i], cols[j], {text: '', invisable: true})
+                // this.$refs[`cell_${rows[i]}_${cols[j]}`][0].style.display = 'none'
+              }
+            }
+          }
+          this.setCellAttrs(rows[0], cols[0])
+        }
+      }
+      console.log(this.value)
+    },
     changeToolbarHandler (attrs) {
       this.$refs.eborder.cellForEach((row, rowIndex, col, colIndex) => {
         // console.log('row: ', row, ', col:', col)
@@ -231,11 +279,19 @@ export default {
     getEditValue (row, col) {
       return this.getDataRowCol(row, col)
     },
-    setDataCell (row, col) {
-      const cell = this.value[row][col]
+    setCellAttrs (row, col) {
+      const cell = this.getDataRowCol(row, col)
       Object.keys(defaultCellAttrs).forEach(attr => {
         this.cellAttrs[attr] = cell[attr] || defaultCellAttrs[attr]
       })
+    },
+    getDataRow (row) {
+      this.value[row] = this.value[row] || {}
+      return this.value[row]
+    },
+    setDataRowCol (row, col, v) {
+      let r = this.getDataRow(row)
+      r[col] = v
     },
     getDataRowCol (row, col) {
       this.value[row] = this.value[row] || {}

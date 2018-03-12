@@ -38,7 +38,10 @@ const defaultCellAttrs = {
   align: 'left',
   valign: 'middle',
   wordWrap: 'normal',
-  formula: ''
+  formula: '',
+  invisable: false,
+  rowspan: 1,
+  colspan: 1
 }
 
 const cellStyle = (attrs) => {
@@ -53,6 +56,10 @@ const cellStyle = (attrs) => {
     if (attrs.backgroundColor) style['background-color'] = attrs.backgroundColor
     if (attrs.align) style['text-align'] = attrs.align
     if (attrs.valign) style['vertical-align'] = attrs.valign
+    // if (attrs.invisable) {
+    //   style['display'] = 'none'
+    //   // style['pointer-events'] = 'none'
+    // }
     if (attrs.wordWrap) {
       style['word-wrap'] = attrs.wordWrap
       style['white-space'] = 'normal'
@@ -65,7 +72,7 @@ const filterStyleAttrs = (attrs) => {
   const style = {}
   Object.keys(defaultCellAttrs).forEach(key => {
     // console.log('key: ', key)
-    if (key !== 'formula') {
+    if (key !== 'formula' && key !== 'rowspan' && key !== 'colspan') {
       if (attrs[key] !== defaultCellAttrs[key]) {
         style[key] = attrs[key]
       }
@@ -76,7 +83,7 @@ const filterStyleAttrs = (attrs) => {
 
 const compareStyleAttrs = (attrs, cb) => {
   Object.keys(defaultCellAttrs).forEach(key => {
-    if (key !== 'formula') {
+    if (key !== 'formula' && key !== 'rowspan' && key !== 'colspan') {
       cb(key, attrs[key], attrs[key] === defaultCellAttrs[key])
     }
   })

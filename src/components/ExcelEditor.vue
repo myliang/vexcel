@@ -1,7 +1,7 @@
 <template>
   <div class="ve-edit" :style="{left: `${left - 1}px`, top: `${top - 1}px`}" v-if="visable">
     <textarea autofocus :value="value.text"
-      :style="[{width: `${width - 8}px`, height: `${height - 2}px`, 'line-height': `${height - 2}px`}, cellStyle(value)]"
+      :style="[{width: `${width - 8}px`, height: `${height - 2}px`, 'line-height': `20px`}, cellStyle(value)]"
       @mousedown.stop="()=>{}"
       @input="updateValue($event.target.value)"></textarea>
   </div>
@@ -26,11 +26,12 @@ export default {
   },
   watch: {
     value (nval, oval) {
-      console.log('nval:', nval)
+      // console.log('nval:', nval)
     }
   },
   methods: {
     reload () {
+      // console.log('target:', this.target)
       const { offsetTop, offsetLeft, offsetWidth, offsetHeight } = this.target
       this.top = offsetTop
       this.left = offsetLeft
