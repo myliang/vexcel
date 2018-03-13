@@ -98,7 +98,7 @@ import ExcelEditor from './ExcelEditor'
 import ExcelResizer from './ExcelResizer'
 import ExcelEditorBar from './ExcelEditorBar'
 import ExcelToolbar from './ExcelToolbar'
-import { defaultCols, formats, fonts, formulas, defaultCellAttrs, cellStyle, compareStyleAttrs } from './settings.js'
+import { defaultCols, formats, fonts, formulas, defaultCellAttrs, cellStyle, compareStyleAttrs, getStyleAttrs } from './settings.js'
 
 export default {
   name: 'v-excel',
@@ -139,10 +139,13 @@ export default {
       colResizer: null,
       cellAttrs: Object.assign({}, defaultCellAttrs),
       selectedBox: null,
+      copyPasteCells: null, // copy, paste cells
+      isClearCopyCells: false,
       current: null
     }
   },
   mounted () {
+    window.addEventListener('keydown', this.copyPasteHandler)
   },
   methods: {
     rowColMouseOverHandler (type, index, evt) {
@@ -160,7 +163,7 @@ export default {
       this.$refs[`col_${index}`].forEach(c => {
         c.width = w
       })
-      this.$refs.eborder.reload()
+      this.borderReload()
       this.$refs.editor && this.$refs.editor.reload()
     },
     rowChangeResizerHandler (index, distance) {
@@ -171,7 +174,7 @@ export default {
       this.$refs[`row_${index}`].forEach(c => {
         c.height = h
       })
-      this.$refs.eborder.reload()
+      this.borderReload()
       this.$refs.editor && this.$refs.editor.reload()
     },
     cellDblclickHandler (row, col, evt) {
@@ -190,23 +193,54 @@ export default {
       // set current data cell
       this.current = {row, col, cell: this.getDataRowCol(row, col)}
     },
+    copyPasteHandler (evt) {
+      // console.log('::::::::>>>', evt)
+      if (evt.ctrlKey) {
+        // ctrl + c
+        if (evt.keyCode === 67) {
+          console.log('>>>', this.$refs.eborder)
+          this.copyPasteCells = this.$refs.eborder.getActivies()
+          evt.preventDefault()
+        }
+        // ctrl + x
+        if (evt.keyCode === 88) {
+          this.isClearCopyCells = true
+          this.copyPasteCells = this.$refs.eborder.getActivies()
+          evt.preventDefault()
+        }
+
+        // ctrl + v
+        if (evt.keyCode === 86) {
+          // console.log('ctrlV')
+          if (this.copyPasteCells !== null) {
+            const { rows, cols } = this.copyPasteCells
+            const c = this.$refs.eborder.getActivies()
+            // console.log(rows, cols, '>>>>>>')
+            rows.forEach((row, rindex) => {
+              cols.forEach((col, cindex) => {
+                this.copyStyleAttrs(row, col, c.rows[0] + rindex, c.cols[0] + cindex, true)
+                if (this.isClearCopyCells) {
+                  this.setDataRowCol(row, col, {text: ''})
+                  this.copyPasteCells = null
+                }
+              })
+            })
+            this.borderReload()
+            this.isClearCopyCells = false
+          }
+        }
+      }
+    },
     changeBorderHandler (rows, cols) {
       // console.log('border.change....')
       // if paint format
       if (this.selectedBox !== null) {
         const { rows, cols } = this.selectedBox
         this.$refs.eborder.cellForEach((row, rowIndex, col, colIndex) => {
-          let cell = this.getDataRowCol(row, col)
+          // let cell = this.getDataRowCol(row, col)
           const copyRow = rows[rowIndex % rows.length]
           const copyCol = cols[colIndex % cols.length]
-          console.log('copy: ', copyRow, copyCol, this.value[copyRow][copyCol])
-          compareStyleAttrs(this.value[copyRow][copyCol], (k, v, isDefault) => {
-            if (isDefault) {
-              this.$delete(cell, k)
-            } else {
-              this.$set(cell, k, v)
-            }
-          })
+          this.copyStyleAttrs(copyRow, copyCol, row, col)
         })
         this.$refs.toolbar.clearPaintFormatActive()
         this.selectedBox = null
@@ -227,15 +261,11 @@ export default {
       if (current.cell.rowspan > 1 || current.cell.colspan > 1) {
         this.$set(current.cell, 'rowspan', defaultCellAttrs.rowspan)
         this.$set(current.cell, 'colspan', defaultCellAttrs.colspan)
-        // console.log('>><<<<<<<<<<,')
         // 取消合并
         for (let i = 0; i < current.cell.rowspan; i++) {
           for (let j = 0; j < current.cell.colspan; j++) {
-            if (i > 0 || j > 0) {
-              // console.log(current.row, i, '>>>')
-              this.setDataRowCol(current.row + i, current.col + j, {text: '', invisable: false})
-              // this.$refs[`cell_${current.row + i}_${current.col + j}`][0].style.display = 'block'
-            }
+            if (i === 0 && j === 0) continue
+            this.setDataRowCol(current.row + i, current.col + j, {text: '', invisable: false})
           }
         }
         this.setCellAttrs(current.row, current.col)
@@ -243,23 +273,19 @@ export default {
         // 合并
         let { rows, cols } = this.$refs.eborder.getActivies()
         if (rows.length > 1 || cols.length > 1) {
-          rows.sort((a, b) => a - b)
-          cols.sort((a, b) => a - b)
           let cell = this.getDataRowCol(rows[0], cols[0])
           this.$set(cell, 'rowspan', rows.length)
           this.$set(cell, 'colspan', cols.length)
           for (let i = 0; i < rows.length; i++) {
             for (let j = 0; j < cols.length; j++) {
-              if (i > 0 || j > 0) {
-                this.setDataRowCol(rows[i], cols[j], {text: '', invisable: true})
-                // this.$refs[`cell_${rows[i]}_${cols[j]}`][0].style.display = 'none'
-              }
+              if (i === 0 && j === 0) continue
+              this.setDataRowCol(rows[i], cols[j], {text: '', invisable: true})
             }
           }
           this.setCellAttrs(rows[0], cols[0])
         }
       }
-      console.log(this.value)
+      // console.log(this.value)
     },
     changeToolbarHandler (attrs) {
       this.$refs.eborder.cellForEach((row, rowIndex, col, colIndex) => {
@@ -273,11 +299,43 @@ export default {
             // console.log(':::::::::', cell, key, v)
             this.$set(cell, key, v)
           }
+          if (key === 'wordWrap') {
+            this.borderReload()
+          }
         })
       })
     },
+    borderReload () {
+      setTimeout(() => {
+        this.$refs.eborder.reload()
+      }, 0)
+    },
     getEditValue (row, col) {
       return this.getDataRowCol(row, col)
+    },
+    copyStyleAttrs (fromRow, fromCol, toRow, toCol, copyText = false) {
+      const fromCell = this.getDataRowCol(fromRow, fromCol)
+      let toCell = this.getDataRowCol(toRow, toCol)
+      compareStyleAttrs(fromCell, (k, v, isDefault) => {
+        if (isDefault) {
+          this.$delete(toCell, k)
+        } else {
+          this.$set(toCell, k, v)
+        }
+      })
+      if (copyText) {
+        this.$set(toCell, 'text', fromCell.text)
+      }
+      const newCell = {}
+      Object.keys(toCell).forEach(k => {
+        if (toCell[k] !== undefined) {
+          newCell[k] = toCell[k]
+        }
+      })
+      if (Object.keys(newCell).length > 0) {
+        this.value[toRow][toCol] = newCell
+      }
+      // console.log('tocell::', toCell)
     },
     setCellAttrs (row, col) {
       const cell = this.getDataRowCol(row, col)
@@ -292,6 +350,9 @@ export default {
     setDataRowCol (row, col, v) {
       let r = this.getDataRow(row)
       r[col] = v
+    },
+    getDataRowColStyle (row, col) {
+      return getStyleAttrs(this.getDataRowCol(row, col))
     },
     getDataRowCol (row, col) {
       this.value[row] = this.value[row] || {}

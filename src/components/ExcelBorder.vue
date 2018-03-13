@@ -7,6 +7,11 @@
     <div class="ve-area-background"
       :style="{background: 'rgba(75, 137, 255, 0.03)', left: `${left}px`, top: `${top}px`, width: `${width - 2}px`, height: `${height - 2}px`}"></div>
     <div class="corner" :style="{background: color, left: `${left + width - 5}px`, top: `${top + height - 5}px`}"></div>
+
+    <div class="ve-paint-border"
+      :style="{left: `${left - 2}px`, top: `${top - 2}px`, width: `${width}px`, height: `${height}px`}"
+      v-if="visableDashedBorder">
+    </div>
   </div>
 </template>
 <script>
@@ -17,7 +22,7 @@ export default {
   },
   data () {
     return {
-      visable: false,
+      visableDashedBorder: false,
       startTarget: null,
       endTarget: null,
       left: 0,
@@ -41,28 +46,27 @@ export default {
       // console.log('>>>>>>>>>>mousedonw')
       // console.log(evt.target.getAttribute('type'))
       console.log(evt.type, evt.detail, evt.buttons)
-      if (evt.detail === 1 && evt.buttons === 1 && evt.target.getAttribute('type') === 'cell') {
+      if (evt.detail === 1 && evt.target.getAttribute('type') === 'cell') {
         // console.log(evt.shiftKey)
-        if (evt.buttons === 1) {
-          if (evt.shiftKey) {
-            this.endTarget = evt.target
-            // console.log(this.startAttrs, this.endAttrs)
-            this.selectAreaOffset()
-            this.change()
-            return
-          }
-
-          this.clearActives()
-          const attrs = getAttrs(evt.target)
-          Object.assign(this, {startTarget: evt.target, endTarget: evt.target, ...attrs})
-          window.addEventListener('mousemove', this.mousemoveHandler)
-          const { $refs } = this.$parent
-          $refs[`row_${this.row}`][0].className = 'active'
-          $refs[`col_h${this.col}`][0].className = 'active'
-          this.colActives.push(this.col)
-          this.rowActives.push(this.row)
+        // if (evt.buttons === 1) {
+        if (evt.shiftKey) {
+          this.endTarget = evt.target
+          // console.log(this.startAttrs, this.endAttrs)
+          this.selectAreaOffset()
+          this.change()
+          return
         }
+        this.clearActives()
+        const attrs = getAttrs(evt.target)
+        Object.assign(this, {startTarget: evt.target, endTarget: evt.target, ...attrs})
+        window.addEventListener('mousemove', this.mousemoveHandler)
+        const { $refs } = this.$parent
+        $refs[`row_${this.row}`][0].className = 'active'
+        $refs[`col_h${this.col}`][0].className = 'active'
+        this.colActives.push(this.col)
+        this.rowActives.push(this.row)
       }
+      // }
     },
     mousemoveHandler (evt) {
       // console.log('>>>>>>>>>>move...')
@@ -97,6 +101,8 @@ export default {
     },
     getActivies () {
       const { rowActives, colActives } = this
+      rowActives.sort((a, b) => a - b)
+      colActives.sort((a, b) => a - b)
       return {rows: rowActives, cols: colActives}
     },
     cellForEach (callback) {

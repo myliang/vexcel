@@ -37,8 +37,8 @@ export default {
       this.left = offsetLeft
       const clientWidth = document.documentElement.clientWidth
       const maxWidth = clientWidth - this.left - 24
-      let ow = this.$refs.iw.offsetWidth + 12
-      // console.log(':::', ow, maxWidth, this.left, clientWidth)
+      let ow = this.$refs.iw.offsetWidth + 16
+      console.log(':::', ow, offsetWidth)
       if (ow > offsetWidth) {
         if (ow > maxWidth) {
           const h = (parseInt(ow / maxWidth) + 1) * 20
@@ -57,7 +57,9 @@ export default {
     },
     changeHandler (v) {
       this.value.text = v
-      this.reload()
+      setTimeout(() => {
+        this.reload()
+      }, 0)
     },
     cellStyle
   }

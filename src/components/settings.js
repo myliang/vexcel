@@ -68,11 +68,15 @@ const cellStyle = (attrs) => {
   return style
 }
 
+const keyIsStyleAttr = (key) => {
+  return key !== 'formula' && key !== 'rowspan' && key !== 'colspan' && key !== 'text'
+}
+
 const filterStyleAttrs = (attrs) => {
   const style = {}
   Object.keys(defaultCellAttrs).forEach(key => {
     // console.log('key: ', key)
-    if (key !== 'formula' && key !== 'rowspan' && key !== 'colspan') {
+    if (keyIsStyleAttr(key)) {
       if (attrs[key] !== defaultCellAttrs[key]) {
         style[key] = attrs[key]
       }
@@ -81,9 +85,19 @@ const filterStyleAttrs = (attrs) => {
   return style
 }
 
+const getStyleAttrs = (attrs) => {
+  const style = {}
+  Object.keys(attrs).forEach(key => {
+    if (keyIsStyleAttr(key)) {
+      style[key] = attrs[key]
+    }
+  })
+  return style
+}
+
 const compareStyleAttrs = (attrs, cb) => {
   Object.keys(defaultCellAttrs).forEach(key => {
-    if (key !== 'formula' && key !== 'rowspan' && key !== 'colspan') {
+    if (keyIsStyleAttr(key)) {
       cb(key, attrs[key], attrs[key] === defaultCellAttrs[key])
     }
   })
@@ -99,5 +113,6 @@ export {
   defaultCellAttrs,
   cellStyle,
   filterStyleAttrs,
-  compareStyleAttrs
+  compareStyleAttrs,
+  getStyleAttrs
 }
