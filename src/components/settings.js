@@ -29,7 +29,7 @@ const formulas = [
 const defaultCellAttrs = {
   font: fonts[0].key,
   format: formats[0].key,
-  fontSize: 10,
+  fontSize: 14,
   fontWeight: 'normal',
   fontStyle: 'normal',
   textDecoration: 'none',
@@ -56,15 +56,15 @@ const cellStyle = (attrs) => {
     if (attrs.backgroundColor) style['background-color'] = attrs.backgroundColor
     if (attrs.align) style['text-align'] = attrs.align
     if (attrs.valign) style['vertical-align'] = attrs.valign
-    // if (attrs.invisable) {
-    //   style['display'] = 'none'
-    //   // style['pointer-events'] = 'none'
-    // }
+    if (attrs.invisable) {
+      style['display'] = 'none'
+    }
     if (attrs.wordWrap) {
       style['word-wrap'] = attrs.wordWrap
       style['white-space'] = 'normal'
     }
   }
+  // console.log('style:', style)
   return style
 }
 

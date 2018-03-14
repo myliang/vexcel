@@ -121,11 +121,11 @@ export default {
       this.$emit('change-merge')
     },
     clearFormatHandler () {
-      const attrs = Object.keys(defaultCellAttrs).map(key => {
-        this.attrs[key] = defaultCellAttrs[key]
-        return {key, v: defaultCellAttrs[key], isDefault: true}
-      })
-      this.$emit('change', attrs)
+      // const attrs = Object.keys(defaultCellAttrs).map(key => {
+      //   this.attrs[key] = defaultCellAttrs[key]
+      //   return {key, v: defaultCellAttrs[key], isDefault: true}
+      // })
+      this.$emit('change', {})
     },
     copyFormatHandler () {
       this.paintFormatActive = !this.paintFormatActive
@@ -142,7 +142,14 @@ export default {
     },
     selectedHandler (key, v) {
       this.attrs[key] = v
-      this.$emit('change', [{key, v, isDefault: v === defaultCellAttrs[key]}])
+      // this.$emit('change', [{key, v, isDefault: v === defaultCellAttrs[key]}])
+      const nAttrs = {}
+      Object.keys(this.attrs).forEach(k => {
+        if (defaultCellAttrs[k] !== this.attrs[k]) {
+          nAttrs[k] = this.attrs[k]
+        }
+      })
+      this.$emit('change', nAttrs)
     },
     printHandler () {
       window.print()

@@ -98,7 +98,7 @@ import ExcelEditor from './ExcelEditor'
 import ExcelResizer from './ExcelResizer'
 import ExcelEditorBar from './ExcelEditorBar'
 import ExcelToolbar from './ExcelToolbar'
-import { defaultCols, formats, fonts, formulas, defaultCellAttrs, cellStyle, compareStyleAttrs, getStyleAttrs } from './settings.js'
+import { defaultCols, formats, fonts, formulas, defaultCellAttrs, cellStyle, getStyleAttrs } from './settings.js'
 
 export default {
   name: 'v-excel',
@@ -255,12 +255,10 @@ export default {
     },
     changeMergeHandler () {
       // merge cell
-      const { current } = this
-      // console.log('merge...', current)
+      let { current } = this
+      console.log('merge...', current)
       // 如果当前的单元格为合并单元格
       if (current.cell.rowspan > 1 || current.cell.colspan > 1) {
-        this.$set(current.cell, 'rowspan', defaultCellAttrs.rowspan)
-        this.$set(current.cell, 'colspan', defaultCellAttrs.colspan)
         // 取消合并
         for (let i = 0; i < current.cell.rowspan; i++) {
           for (let j = 0; j < current.cell.colspan; j++) {
@@ -268,12 +266,15 @@ export default {
             this.setDataRowCol(current.row + i, current.col + j, {text: '', invisable: false})
           }
         }
+        this.$set(current.cell, 'rowspan', defaultCellAttrs.rowspan)
+        this.$set(current.cell, 'colspan', defaultCellAttrs.colspan)
         this.setCellAttrs(current.row, current.col)
       } else {
         // 合并
         let { rows, cols } = this.$refs.eborder.getActivies()
         if (rows.length > 1 || cols.length > 1) {
-          let cell = this.getDataRowCol(rows[0], cols[0])
+          const cell = this.getDataRowCol(rows[0], cols[0])
+          this.current = {row: rows[0], col: cols[0], cell}
           this.$set(cell, 'rowspan', rows.length)
           this.$set(cell, 'colspan', cols.length)
           for (let i = 0; i < rows.length; i++) {
@@ -289,20 +290,8 @@ export default {
     },
     changeToolbarHandler (attrs) {
       this.$refs.eborder.cellForEach((row, rowIndex, col, colIndex) => {
-        // console.log('row: ', row, ', col:', col)
-        let cell = this.getDataRowCol(row, col)
-        attrs.forEach(({key, v, isDefault}) => {
-          // console.log('key: ', cell, key, v, isDefault)
-          if (isDefault) {
-            this.$delete(cell, key)
-          } else {
-            // console.log(':::::::::', cell, key, v)
-            this.$set(cell, key, v)
-          }
-          if (key === 'wordWrap') {
-            this.borderReload()
-          }
-        })
+        this.setDataRowCol(row, col, attrs, false)
+        this.borderReload()
       })
     },
     borderReload () {
@@ -314,28 +303,8 @@ export default {
       return this.getDataRowCol(row, col)
     },
     copyStyleAttrs (fromRow, fromCol, toRow, toCol, copyText = false) {
-      const fromCell = this.getDataRowCol(fromRow, fromCol)
-      let toCell = this.getDataRowCol(toRow, toCol)
-      compareStyleAttrs(fromCell, (k, v, isDefault) => {
-        if (isDefault) {
-          this.$delete(toCell, k)
-        } else {
-          this.$set(toCell, k, v)
-        }
-      })
-      if (copyText) {
-        this.$set(toCell, 'text', fromCell.text)
-      }
-      const newCell = {}
-      Object.keys(toCell).forEach(k => {
-        if (toCell[k] !== undefined) {
-          newCell[k] = toCell[k]
-        }
-      })
-      if (Object.keys(newCell).length > 0) {
-        this.value[toRow][toCol] = newCell
-      }
-      // console.log('tocell::', toCell)
+      const {rowspan, colspan, ...fromCell} = this.getDataRowCol(fromRow, fromCol)
+      this.setDataRowCol(toRow, toCol, fromCell, copyText)
     },
     setCellAttrs (row, col) {
       const cell = this.getDataRowCol(row, col)
@@ -344,19 +313,39 @@ export default {
       })
     },
     getDataRow (row) {
-      this.value[row] = this.value[row] || {}
+      if (!this.value[row]) {
+        this.$set(this.value, row, {})
+      }
       return this.value[row]
     },
-    setDataRowCol (row, col, v) {
+    setDataRowCol (row, col, v, copyText = true) {
       let r = this.getDataRow(row)
-      r[col] = v
+      const cell = r[col]
+      if (!copyText && cell) {
+        v.text = cell.text
+      }
+      if (cell && cell.rowspan) {
+        v.rowspan = cell.rowspan
+      }
+      if (cell && cell.colspan) {
+        v.colspan = cell.colspan
+      }
+      this.$set(r, col, v)
+      if (this.editor !== null) {
+        this.editor.value = v
+      }
+      return r
     },
     getDataRowColStyle (row, col) {
       return getStyleAttrs(this.getDataRowCol(row, col))
     },
     getDataRowCol (row, col) {
-      this.value[row] = this.value[row] || {}
-      this.value[row][col] = this.value[row][col] || {text: ''}
+      if (!this.value[row]) {
+        this.$set(this.value, row, {})
+      }
+      if (!this.value[row][col]) {
+        this.$set(this.value[row], col, {text: ''})
+      }
       return this.value[row][col]
     },
     cellStyle
