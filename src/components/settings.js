@@ -1,16 +1,34 @@
+const formatRender = (v) => v
+const formatNumberRender = (v) => {
+  if (/^(-?\d*.?\d*)$/.test(v)) {
+    v = Number(v)
+    v = v.toFixed(2).toString()
+    const parts = v.split('.')
+    parts[0] = parts[0].toString().replace(/(\d)(?=(\d{3})+(?!\d))/g, '$1' + ',')
+    return parts.join('.')
+    // console.log('1234567890'.replace(/\d+?(?=(?:\d{3})+$)/img, '$&,'))
+  }
+  return v
+}
 const formats = [
-  {key: 'normal', title: '常规'},
-  {key: 'text', title: '纯文本'},
-  {key: 'number', title: '数字', label: '1,000.12'},
-  {key: 'percent', title: '百分比', label: '10.12%'},
-  {key: 'scientific', title: '科学计数', label: '1.01E+03'},
-  {key: 'RMB', title: '人民币', label: '￥10.00'},
-  {key: 'USD', title: '美元', label: '$10.00'},
-  {key: 'HK', title: '港币', label: 'HK$10.00'},
-  {key: 'time', title: '时间', label: '00:00:00'},
-  {key: 'date', title: '日期', label: '2016/12/12'},
-  {key: 'dateTime', title: '日期时间', label: '2016/12/12 00:00:00'}
+  {key: 'normal', title: '常规', render: formatRender},
+  {key: 'text', title: '纯文本', render: formatRender},
+  {key: 'number', title: '数字', label: '1,000.12', render: formatNumberRender},
+  {key: 'percent', title: '百分比', label: '10.12%', render: (v) => `${formatNumberRender(v)}%`},
+  {key: 'RMB', title: '人民币', label: '￥10.00', render: (v) => `￥${formatNumberRender(v)}`},
+  {key: 'USD', title: '美元', label: '$10.00', render: (v) => `$${formatNumberRender(v)}`}
+  // {key: 'time', title: '时间', label: '00:00:00'},
+  // {key: 'date', title: '日期', label: '2016/12/12'},
+  // {key: 'dateTime', title: '日期时间', label: '2016/12/12 00:00:00'}
 ]
+const formatRenderHtml = (v) => {
+  for (let i = 0; i < formats.length; i++) {
+    if (formats[i].key === v.format) {
+      return formats[i].render(v.text)
+    }
+  }
+  return v.text
+}
 const fonts = [
   {key: 'Microsoft YaHei', title: '微软雅黑'},
   {key: 'STFangsong', title: '华文仿宋'},
@@ -114,5 +132,6 @@ export {
   cellStyle,
   filterStyleAttrs,
   compareStyleAttrs,
-  getStyleAttrs
+  getStyleAttrs,
+  formatRenderHtml
 }

@@ -67,7 +67,7 @@
               :row-index="rindex" :col-index="cindex" type="cell"
               @dblclick.left.stop="cellDblclickHandler(rindex, cindex, $event)"
               @mousedown.left="cellMousedownHandler(rindex, cindex, $event)">
-              {{ value[rindex] && value[rindex][cindex] && value[rindex][cindex].text }}
+              {{ value[rindex] && value[rindex][cindex] && formatRenderHtml(value[rindex][cindex]) }}
             </td>
           </tr>
         </tbody>
@@ -98,7 +98,7 @@ import ExcelEditor from './ExcelEditor'
 import ExcelResizer from './ExcelResizer'
 import ExcelEditorBar from './ExcelEditorBar'
 import ExcelToolbar from './ExcelToolbar'
-import { defaultCols, formats, fonts, formulas, defaultCellAttrs, cellStyle, getStyleAttrs } from './settings.js'
+import { defaultCols, formats, fonts, formulas, defaultCellAttrs, cellStyle, getStyleAttrs, formatRenderHtml } from './settings.js'
 
 export default {
   name: 'v-excel',
@@ -348,7 +348,8 @@ export default {
       }
       return this.value[row][col]
     },
-    cellStyle
+    cellStyle,
+    formatRenderHtml
   }
 }
 
