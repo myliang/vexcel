@@ -92,6 +92,7 @@
   </div>
 </template>
 <script>
+import {bind} from './event.js'
 import ExcelBorder from './ExcelBorder'
 import ExcelPaintBorder from './ExcelPaintBorder'
 import ExcelEditor from './ExcelEditor'
@@ -145,7 +146,7 @@ export default {
     }
   },
   mounted () {
-    window.addEventListener('keydown', this.copyPasteHandler)
+    bind('keydown', this.copyPasteHandler)
   },
   methods: {
     rowColMouseOverHandler (type, index, evt) {

@@ -6,7 +6,8 @@
     <div class="ve-border" :style="{background: color, left: `${left - 1}px`, top: `${top - 1}px`, height: `${height}px`, width: '2px'}"></div>
     <div class="ve-area-background"
       :style="{background: 'rgba(75, 137, 255, 0.03)', left: `${left}px`, top: `${top}px`, width: `${width - 2}px`, height: `${height - 2}px`}"></div>
-    <div class="corner" :style="{background: color, left: `${left + width - 5}px`, top: `${top + height - 5}px`}"></div>
+    <div class="corner" :style="{background: color, left: `${left + width - 5}px`, top: `${top + height - 5}px`}"
+      @mousedown.stop="copyHandler"></div>
 
     <div class="ve-paint-border"
       :style="{left: `${left - 2}px`, top: `${top - 2}px`, width: `${width}px`, height: `${height}px`}"
@@ -15,6 +16,7 @@
   </div>
 </template>
 <script>
+import {bind, unbind, mouseMoveUp} from './event.js'
 export default {
   name: 'excel-border',
   props: {
@@ -30,18 +32,21 @@ export default {
       width: 0,
       height: 0,
       colActives: [],
-      rowActives: []
+      rowActives: [],
+      copyActives: null
     }
   },
   mounted () {
-    window.addEventListener('mousedown', this.mousedownHandler)
-    window.addEventListener('mouseup', this.mouseupHandler)
+    bind('mousedown', this.mousedownHandler)
   },
   destroyed () {
-    window.removeEventListener('mousedown', this.mousedownHandler)
-    window.removeEventListener('mouseup', this.mouseupHandler)
+    unbind('mousedown', this.mousedownHandler)
   },
   methods: {
+    copyHandler (evt) {
+      this.copyActives = this.getActivies()
+      mouseMoveUp((evt) => {}, (evt) => {})
+    },
     mousedownHandler (evt) {
       // console.log('>>>>>>>>>>mousedonw')
       // console.log(evt.target.getAttribute('type'))
@@ -59,29 +64,23 @@ export default {
         this.clearActives()
         const attrs = getAttrs(evt.target)
         Object.assign(this, {startTarget: evt.target, endTarget: evt.target, ...attrs})
-        window.addEventListener('mousemove', this.mousemoveHandler)
         const { $refs } = this.$parent
         $refs[`row_${this.row}`][0].className = 'active'
         $refs[`col_h${this.col}`][0].className = 'active'
         this.colActives.push(this.col)
         this.rowActives.push(this.row)
+
+        // window.addEventListener('mousemove', this.mousemoveHandler)
+        mouseMoveUp((e) => {
+          if (e.target === this.target) return
+          if (e.buttons === 1 && e.target.getAttribute('type') === 'cell') {
+            this.endTarget = e.target
+            this.selectAreaOffset()
+          }
+        }, (e) => { this.change() })
       }
-      // }
-    },
-    mousemoveHandler (evt) {
-      // console.log('>>>>>>>>>>move...')
-      if (evt.target === this.target) return
-      if (evt.buttons === 1 && evt.target.getAttribute('type') === 'cell') {
-        this.endTarget = evt.target
-        this.selectAreaOffset()
-      }
-    },
-    mouseupHandler (evt) {
-      window.removeEventListener('mousemove', this.mousemoveHandler)
-      this.change()
     },
     reload () {
-      // console.log('reload...')
       this.selectAreaOffset()
     },
     change () {

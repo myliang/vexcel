@@ -105,7 +105,7 @@ export default {
   },
   computed: {
     fontTitle () {
-      console.log(this.attrs)
+      // console.log(this.attrs)
       return this.fonts.filter(f => f.key === (this.attrs.font))[0].title
     },
     formatTitle () {

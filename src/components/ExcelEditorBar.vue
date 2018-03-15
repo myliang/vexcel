@@ -11,6 +11,7 @@
   </div>
 </template>
 <script>
+import {mouseMoveUp} from './event.js'
 export default {
   name: 'excecl-editor-bar',
   props: {
@@ -23,16 +24,10 @@ export default {
       startEvent: null
     }
   },
-  mounted () {
-    window.addEventListener('mouseup', this.mouseupHandler)
-  },
-  destroyed () {
-    window.removeEventListener('mouseup', this.mouseupHandler)
-  },
   methods: {
     mousedownHandler (evt) {
       this.startEvent = evt
-      window.addEventListener('mousemove', this.mousemoveHandler)
+      mouseMoveUp(this.mousemoveHandler, (e) => {})
     },
     mousemoveHandler (evt) {
       const { bar } = this.$refs
@@ -41,9 +36,6 @@ export default {
       if (nheight > 150 || nheight < 26) return
       this.style = { height: `${nheight}px`, 'line-height': `${nheight}px` }
       this.startEvent = evt
-    },
-    mouseupHandler () {
-      window.removeEventListener('mousemove', this.mousemoveHandler)
     },
     updateValue (v) {
       this.changeHandler(v)

@@ -10,6 +10,7 @@
 </div>
 </template>
 <script>
+import {mouseMoveUp} from './event.js'
 export default {
   name: 'excel-resizer',
   props: {
@@ -32,18 +33,11 @@ export default {
       this.lineStyle = this.lineStyleObject(nVal)
     }
   },
-  mounted () {
-    window.addEventListener('mousemove', this.mousemoveHandler)
-    window.addEventListener('mouseup', this.mouseupHandler)
-  },
-  destroyed () {
-    window.removeEventListener('mousemove', this.mousemoveHandler)
-    window.removeEventListener('mouseup', this.mouseupHandler)
-  },
   methods: {
     mousedownHandler (evt) {
       this.startEvent = evt
       this.lineVisable = true
+      mouseMoveUp(this.mousemoveHandler, this.mouseupHandler)
     },
     mousemoveHandler (evt) {
       const { startEvent, vertical, $refs } = this
