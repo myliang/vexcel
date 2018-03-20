@@ -59,7 +59,7 @@ export default {
       const firstRow = rows[0]
       const firstCol = cols[0]
       let boxRange = null
-      console.log('rows: ', rows)
+      // console.log('rows: ', rows)
       mouseMoveUp((e) => {
         this.visableDashedBorder = true
         const { target } = e
@@ -171,7 +171,7 @@ export default {
       const startAttrs = getAttrs(startTarget)
       const endAttrs = getAttrs(endTarget)
       const { $parent } = this
-      const { $refs, getDataRowCol } = $parent
+      const { $refs } = $parent
       this.clearActives()
 
       let sRow = startAttrs.row
@@ -186,59 +186,25 @@ export default {
         sCol = endAttrs.col
         eCol = startAttrs.col
       }
-      let minRow = sRow
-      let maxRow = eRow
       // calc min, max of row
       // console.log('s: ', sRow, sCol, ', e: ', eRow, eCol, ', minRow: ', minRow)
-      for (let j = sCol; j <= eCol; j++) {
-        let cRow = sRow
-        let dcell = getDataRowCol(cRow, j)
-        if (dcell.merge) {
-          cRow += dcell.merge[0] - cRow
-        }
-        if (cRow < minRow) minRow = cRow
-
-        cRow = eRow
-        dcell = getDataRowCol(cRow, j)
-        const cRowspan = dcell.rowspan || 1
-        if (parseInt(cRowspan) > 1) {
-          cRow += parseInt(cRowspan)
-        } else {
-          if (dcell.merge) {
-            const [r, c] = dcell.merge
-            const rs = getDataRowCol(r, c).rowspan
-            cRow += rs + (r - cRow)
-          }
-        }
-        if (cRow - 1 > maxRow) maxRow = cRow - 1
-      }
+      let [minRow, maxRow] = this.calcMinＭaxRow(sRow, eRow, sCol, eCol)
 
       // calc min, max of col
-      let minCol = sCol
-      let maxCol = eCol
-      for (let j = sRow; j <= eRow; j++) {
-        let cCol = sCol
-        let dcell = getDataRowCol(j, cCol)
-        if (dcell.merge) {
-          cCol += dcell.merge[1] - cCol
+      let [minCol, maxCol] = this.calcMinMaxCol(minRow, maxRow, sCol, eCol)
+      while (true) {
+        const [minr, maxr] = this.calcMinＭaxRow(minRow, maxRow, minCol, maxCol)
+        let [minc, maxc] = this.calcMinMaxCol(minRow, maxRow, minCol, maxCol)
+        if (minRow === minr && maxRow === maxr && minCol === minc && maxCol === maxc) {
+          break
         }
-        if (cCol < minCol) minCol = cCol
-
-        cCol = eCol
-        dcell = getDataRowCol(j, cCol)
-        console.log(j, cCol, dcell.colspan)
-        const cColspan = dcell.colspan || 1
-        if (parseInt(cColspan) > 1) {
-          cCol += parseInt(cColspan)
-        } else {
-          if (dcell.merge) {
-            const [r, c] = dcell.merge
-            const rc = getDataRowCol(r, c).colspan
-            cCol += rc + (c - cCol)
-          }
-        }
-        if (cCol - 1 > maxCol) maxCol = cCol - 1
+        minRow = minr
+        maxRow = maxr
+        minCol = minc
+        maxCol = maxc
       }
+
+      // console.log('minRow:', minRow, ',minCol:', minCol, ',maxRow:', maxRow, ',maxCol:', maxCol)
 
       let height = 0
       let width = 0
@@ -259,6 +225,62 @@ export default {
 
       // console.log(top, left, height, width)
       Object.assign(this, {top, left, height, width})
+    },
+    calcMinMaxCol (sRow, eRow, sCol, eCol) {
+      let minCol = sCol
+      let maxCol = eCol
+      for (let j = sRow; j <= eRow; j++) {
+        let cCol = sCol
+        let dcell = this.$parent.getDataRowCol(j, cCol)
+        if (dcell.merge) {
+          cCol += dcell.merge[1] - cCol
+        }
+        if (cCol < minCol) minCol = cCol
+
+        cCol = maxCol
+        dcell = this.$parent.getDataRowCol(j, cCol)
+        // console.log(j, cCol, dcell.colspan)
+        const cColspan = dcell.colspan || 1
+        if (parseInt(cColspan) > 1) {
+          cCol += parseInt(cColspan)
+        } else {
+          if (dcell.merge) {
+            const [r, c] = dcell.merge
+            const rc = this.$parent.getDataRowCol(r, c).colspan
+            cCol += rc + (c - cCol)
+          }
+        }
+        if (cCol - 1 > maxCol) maxCol = cCol - 1
+      }
+      return [minCol, maxCol]
+    },
+    calcMinＭaxRow (sRow, eRow, sCol, eCol) {
+      let minRow = sRow
+      let maxRow = eRow
+      for (let j = sCol; j <= eCol; j++) {
+        let cRow = sRow
+        let dcell = this.$parent.getDataRowCol(cRow, j)
+        if (dcell.merge) {
+          cRow += dcell.merge[0] - cRow
+        }
+        if (cRow < minRow) minRow = cRow
+
+        cRow = maxRow
+        dcell = this.$parent.getDataRowCol(cRow, j)
+        // console.log('row: ', j, cRow, dcell.rowspan)
+        const cRowspan = dcell.rowspan || 1
+        if (parseInt(cRowspan) > 1) {
+          cRow += parseInt(cRowspan)
+        } else {
+          if (dcell.merge) {
+            const [r, c] = dcell.merge
+            const rs = this.$parent.getDataRowCol(r, c).rowspan
+            cRow += rs + (r - cRow)
+          }
+        }
+        if (cRow - 1 > maxRow) maxRow = cRow - 1
+      }
+      return [minRow, maxRow]
     },
     getRowHeight (rowIndex) {
       const { $refs } = this.$parent
