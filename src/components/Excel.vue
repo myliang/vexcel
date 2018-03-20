@@ -201,13 +201,13 @@ export default {
         if (evt.keyCode === 67) {
           console.log('>>>', this.$refs.eborder)
           this.copyPasteCells = this.$refs.eborder.getActivies()
-          evt.preventDefault()
+          evt.keyCode = 0
         }
         // ctrl + x
         if (evt.keyCode === 88) {
           this.isClearCopyCells = true
           this.copyPasteCells = this.$refs.eborder.getActivies()
-          evt.preventDefault()
+          evt.keyCode = 0
         }
 
         // ctrl + v
@@ -215,6 +215,7 @@ export default {
           // console.log('ctrlV')
           if (this.copyPasteCells !== null) {
             const { rows, cols } = this.copyPasteCells
+            console.log('rows: ', rows, ', cols: ', cols)
             const c = this.$refs.eborder.getActivies()
             // console.log(rows, cols, '>>>>>>')
             rows.forEach((row, rindex) => {
@@ -281,7 +282,7 @@ export default {
           for (let i = 0; i < rows.length; i++) {
             for (let j = 0; j < cols.length; j++) {
               if (i === 0 && j === 0) continue
-              this.setDataRowCol(rows[i], cols[j], {text: '', invisable: true})
+              this.setDataRowCol(rows[i], cols[j], {text: '', invisable: true, merge: [rows[0], cols[0]]})
             }
           }
           this.setCellAttrs(rows[0], cols[0])
@@ -291,7 +292,10 @@ export default {
     },
     changeToolbarHandler (attrs) {
       this.$refs.eborder.cellForEach((row, rowIndex, col, colIndex) => {
-        this.setDataRowCol(row, col, attrs, false)
+        const cell = this.getDataRowCol(row, col)
+        if (!cell.invisable) {
+          this.setDataRowCol(row, col, attrs, false, false)
+        }
         this.borderReload()
       })
     },
@@ -304,8 +308,13 @@ export default {
       return this.getDataRowCol(row, col)
     },
     copyStyleAttrs (fromRow, fromCol, toRow, toCol, copyText = false) {
-      const {rowspan, colspan, ...fromCell} = this.getDataRowCol(fromRow, fromCol)
-      this.setDataRowCol(toRow, toCol, fromCell, copyText)
+      let {merge, ...fromCell} = this.getDataRowCol(fromRow, fromCol)
+      console.log('merge::', merge)
+      if (merge) {
+        merge = [merge[0] + (toRow - fromRow), merge[1] + (toCol - fromCol)]
+      }
+      console.log('>>>merge::', merge)
+      this.setDataRowCol(toRow, toCol, {merge, ...fromCell}, copyText)
     },
     setCellAttrs (row, col) {
       const cell = this.getDataRowCol(row, col)
@@ -319,16 +328,16 @@ export default {
       }
       return this.value[row]
     },
-    setDataRowCol (row, col, v, copyText = true) {
+    setDataRowCol (row, col, v, copyText = true, copyspan = true) {
       let r = this.getDataRow(row)
       const cell = r[col]
       if (!copyText && cell) {
         v.text = cell.text
       }
-      if (cell && cell.rowspan) {
+      if (!copyspan && cell && cell.rowspan) {
         v.rowspan = cell.rowspan
       }
-      if (cell && cell.colspan) {
+      if (!copyspan && cell && cell.colspan) {
         v.colspan = cell.colspan
       }
       this.$set(r, col, v)

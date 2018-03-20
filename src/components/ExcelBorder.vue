@@ -10,7 +10,8 @@
       @mousedown.stop="copyHandler"></div>
 
     <div class="ve-paint-border"
-      :style="{left: `${left - 2}px`, top: `${top - 2}px`, width: `${width}px`, height: `${height}px`}"
+      :style="{left: `${left - 1}px`, top: `${top - 1}px`, width: `${width}px`, height: `${height}px`}"
+      ref="dashedBorder"
       v-if="visableDashedBorder">
     </div>
   </div>
@@ -43,9 +44,55 @@ export default {
     unbind('mousedown', this.mousedownHandler)
   },
   methods: {
+    setDashedBorderStyle (left, top, width, height) {
+      const { dashedBorder } = this.$refs
+      // console.log('dashedBorder:', left, top, width, height)
+      dashedBorder.style.left = `${left - 1}px`
+      dashedBorder.style.top = `${top - 1}px`
+      dashedBorder.style.width = `${width}px`
+      dashedBorder.style.height = `${height}px`
+    },
     copyHandler (evt) {
-      this.copyActives = this.getActivies()
-      mouseMoveUp((evt) => {}, (evt) => {})
+      const { rows, cols } = this.getActivies()
+      console.log('rows: ', rows)
+      mouseMoveUp((e) => {
+        this.visableDashedBorder = true
+        const { target } = e
+        const rowIndex = target.getAttribute('row-index')
+        const colIndex = target.getAttribute('col-index')
+        if (rowIndex && colIndex) {
+          const rdiff = rows[0] - rowIndex
+          const cdiff = cols[0] - colIndex
+          // console.log(rows[0], rowIndex, rdiff, ',,,', cdiff)
+          if (rdiff < 0) {
+            if (Math.abs(rdiff) > Math.abs(cdiff)) {
+              // bottom
+              console.log('::::::bottom', this.top)
+              this.setDashedBorderStyle(this.left, this.top, this.width, this.getRowsHeight(Math.abs(rdiff), rows[0]))
+            } else {
+              // right
+              this.setDashedBorderStyle(this.left, this.top, this.getColsWidth(Math.abs(cdiff), cols[0]), this.height)
+            }
+          } else {
+            if (rdiff > Math.abs(cdiff)) {
+              // top
+              console.log('top>>')
+              const h = this.getRowsHeight(Math.abs(rdiff), rows[0])
+              this.setDashedBorderStyle(this.left, this.top - h, this.width, h)
+            } else {
+              // left
+              const w = this.getColsWidth(Math.abs(cdiff), cols[0])
+              if (cdiff < 0) {
+                this.setDashedBorderStyle(this.left, this.top, this.width + w, this.height)
+              } else {
+                this.setDashedBorderStyle(this.left - w, this.top, w, this.height)
+              }
+            }
+          }
+        }
+      }, (evt) => {
+        this.visableDashedBorder = false
+      })
     },
     mousedownHandler (evt) {
       // console.log('>>>>>>>>>>mousedonw')
@@ -61,14 +108,10 @@ export default {
           this.change()
           return
         }
-        this.clearActives()
+        // this.clearActives()
         const attrs = getAttrs(evt.target)
         Object.assign(this, {startTarget: evt.target, endTarget: evt.target, ...attrs})
-        const { $refs } = this.$parent
-        $refs[`row_${this.row}`][0].className = 'active'
-        $refs[`col_h${this.col}`][0].className = 'active'
-        this.colActives.push(this.col)
-        this.rowActives.push(this.row)
+        this.selectAreaOffset()
 
         // window.addEventListener('mousemove', this.mousemoveHandler)
         mouseMoveUp((e) => {
@@ -116,57 +159,117 @@ export default {
       const { startTarget, endTarget } = this
       const startAttrs = getAttrs(startTarget)
       const endAttrs = getAttrs(endTarget)
-      this.clearActives()
       const { $parent } = this
-      const { $refs } = $parent
-      const soRow = startAttrs.row
-      const soCol = startAttrs.col
-      const eoRow = endAttrs.row
-      const eoCol = endAttrs.col
+      const { $refs, getDataRowCol } = $parent
+      this.clearActives()
+
+      let sRow = startAttrs.row
+      let sCol = startAttrs.col
+      let eRow = endAttrs.row
+      let eCol = endAttrs.col
+      if (sRow > eRow) {
+        sRow = endAttrs.row
+        eRow = startAttrs.row
+      }
+      if (sCol > eCol) {
+        sCol = endAttrs.col
+        eCol = startAttrs.col
+      }
+      let minRow = sRow
+      let maxRow = eRow
+      // calc min, max of row
+      // console.log('s: ', sRow, sCol, ', e: ', eRow, eCol, ', minRow: ', minRow)
+      for (let j = sCol; j <= eCol; j++) {
+        let cRow = sRow
+        let dcell = getDataRowCol(cRow, j)
+        if (dcell.merge) {
+          cRow += dcell.merge[0] - cRow
+        }
+        if (cRow < minRow) minRow = cRow
+
+        cRow = eRow
+        dcell = getDataRowCol(cRow, j)
+        const cRowspan = dcell.rowspan || 1
+        if (parseInt(cRowspan) > 1) {
+          cRow += parseInt(cRowspan)
+        } else {
+          if (dcell.merge) {
+            const [r, c] = dcell.merge
+            const rs = getDataRowCol(r, c).rowspan
+            cRow += rs + (r - cRow)
+          }
+        }
+        if (cRow - 1 > maxRow) maxRow = cRow - 1
+      }
+
+      // calc min, max of col
+      let minCol = sCol
+      let maxCol = eCol
+      for (let j = sRow; j <= eRow; j++) {
+        let cCol = sCol
+        let dcell = getDataRowCol(j, cCol)
+        if (dcell.merge) {
+          cCol += dcell.merge[1] - cCol
+        }
+        if (cCol < minCol) minCol = cCol
+
+        cCol = eCol
+        dcell = getDataRowCol(j, cCol)
+        // console.log(j, cCol, dcell.colspan)
+        const cColspan = dcell.colspan || 1
+        if (parseInt(cColspan) > 1) {
+          cCol += parseInt(cColspan)
+        } else {
+          if (dcell.merge) {
+            const [r, c] = dcell.merge
+            const rc = getDataRowCol(r, c).colspan
+            cCol += rc + (c - cCol)
+          }
+        }
+        if (cCol - 1 > maxCol) maxCol = cCol - 1
+      }
+
       let height = 0
       let width = 0
-      let top = startAttrs.top
-      let left = startAttrs.left
 
-      const rowHeight = (s, e) => {
-        for (let i = s.row; i <= e.row; i++) {
-          // console.log('row>>', s)
-          // this.rowActives[i] = true
-          $refs[`row_${i}`][0].className = 'active'
-          this.rowActives.push(i)
-          for (let j = 0; j < s.rowspan; j++) {
-            height += parseInt($refs[`row_${i + j}`][0].offsetHeight)
-          }
-        }
+      for (let i = minRow; i <= maxRow; i++) {
+        $refs[`row_${i}`][0].className = 'active'
+        this.rowActives.push(i)
+        height += this.getRowHeight(i)
       }
 
-      const colWidth = (s, e) => {
-        for (let i = s.col; i <= e.col; i++) {
-          // col width
-          // this.colActives[i] = true
-          $refs[`col_h${i}`][0].className = 'active'
-          this.colActives.push(i)
-          for (let j = 0; j < s.colspan; j++) {
-            width += parseInt($refs[`col_${i + j}`][0].width)
-          }
-        }
+      for (let i = minCol; i <= maxCol; i++) {
+        $refs[`col_h${i}`][0].className = 'active'
+        this.colActives.push(i)
+        width += this.getColWidth(i)
       }
 
-      if (eoRow >= soRow) {
-        rowHeight(startAttrs, endAttrs)
-      } else {
-        rowHeight(endAttrs, startAttrs)
-        top = endAttrs.top
-      }
-      if (eoCol >= soCol) {
-        colWidth(startAttrs, endAttrs)
-      } else {
-        colWidth(endAttrs, startAttrs)
-        left = endAttrs.left
-      }
+      const {left, top} = getAttrs($refs[`cell_${minRow}_${minCol}`][0])
 
       // console.log(top, left, height, width)
       Object.assign(this, {top, left, height, width})
+    },
+    getRowHeight (rowIndex) {
+      const { $refs } = this.$parent
+      return parseInt($refs[`row_${rowIndex}`][0].offsetHeight)
+    },
+    getColWidth (colIndex) {
+      const { $refs } = this.$parent
+      return parseInt($refs[`col_${colIndex}`][0].width)
+    },
+    getRowsHeight (max, offset) {
+      let height = 0
+      for (let i = 0; i < max; i++) {
+        height += this.getRowHeight(i + offset)
+      }
+      return height
+    },
+    getColsWidth (max, offset) {
+      let width = 0
+      for (let j = 0; j < max; j++) {
+        width += this.getColWidth(offset + j)
+      }
+      return width
     }
   }
 }
