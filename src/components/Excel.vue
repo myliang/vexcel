@@ -72,7 +72,10 @@
           </tr>
         </tbody>
       </table>
-      <excel-border ref="eborder" @change="changeBorderHandler">
+      <excel-border
+        ref="eborder"
+        @change="changeBorderHandler"
+        @copy="copyBorderHandler">
       </excel-border>
       <excel-paint-border
         :target="pborderTarget"/>
@@ -247,6 +250,9 @@ export default {
         this.$refs.toolbar.clearPaintFormatActive()
         this.selectedBox = null
       }
+    },
+    copyBorderHandler (x, y, x1, y1) {
+      console.log('>>>', x, y, x1, y1)
     },
     changePaintHandler (isCopy) {
       if (isCopy) {

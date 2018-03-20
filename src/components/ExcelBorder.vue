@@ -54,6 +54,11 @@ export default {
     },
     copyHandler (evt) {
       const { rows, cols } = this.getActivies()
+      const lastRow = rows[rows.length - 1]
+      const lastCol = cols[cols.length - 1]
+      const firstRow = rows[0]
+      const firstCol = cols[0]
+      let boxRange = null
       console.log('rows: ', rows)
       mouseMoveUp((e) => {
         this.visableDashedBorder = true
@@ -61,37 +66,43 @@ export default {
         const rowIndex = target.getAttribute('row-index')
         const colIndex = target.getAttribute('col-index')
         if (rowIndex && colIndex) {
-          const rdiff = rows[0] - rowIndex
-          const cdiff = cols[0] - colIndex
-          // console.log(rows[0], rowIndex, rdiff, ',,,', cdiff)
+          let rdiff = lastRow - rowIndex
+          let cdiff = lastCol - colIndex
+          let _rdiff = rows[0] - rowIndex
+          let _cdiff = cols[0] - colIndex
+          // console.log(rdiff, cdiff, ',,,', _rdiff, _cdiff)
           if (rdiff < 0) {
-            if (Math.abs(rdiff) > Math.abs(cdiff)) {
-              // bottom
-              console.log('::::::bottom', this.top)
-              this.setDashedBorderStyle(this.left, this.top, this.width, this.getRowsHeight(Math.abs(rdiff), rows[0]))
-            } else {
-              // right
-              this.setDashedBorderStyle(this.left, this.top, this.getColsWidth(Math.abs(cdiff), cols[0]), this.height)
-            }
+            // bottom
+            // console.log('FCK=>bottom')
+            this.setDashedBorderStyle(this.left, this.top, this.width, this.height + this.getRowsHeight(Math.abs(rdiff), lastRow))
+            boxRange = [lastRow + 1, firstCol, lastRow + Math.abs(rdiff), lastCol]
+          } else if (cdiff < 0) {
+            // right
+            // console.log('FCK=>right')
+            this.setDashedBorderStyle(this.left, this.top, this.width + this.getColsWidth(Math.abs(cdiff), lastCol), this.height)
+            boxRange = [firstRow, lastCol + 1, lastRow, lastCol + Math.abs(cdiff)]
+          } else if (_rdiff > 0) {
+            // top
+            // console.log('FCK=>top')
+            const h = this.getRowsHeight(Math.abs(_rdiff), firstRow)
+            this.setDashedBorderStyle(this.left, this.top - h, this.width, h)
+            boxRange = [firstRow - Math.abs(_rdiff), firstCol, firstRow - 1, lastCol]
+          } else if (_cdiff > 0) {
+            // left
+            // console.log('FCK=>left')
+            const w = this.getColsWidth(Math.abs(_cdiff), firstCol)
+            this.setDashedBorderStyle(this.left - w, this.top, w, this.height)
+            boxRange = [firstRow, firstCol - Math.abs(_cdiff), lastRow, firstCol - 1]
           } else {
-            if (rdiff > Math.abs(cdiff)) {
-              // top
-              console.log('top>>')
-              const h = this.getRowsHeight(Math.abs(rdiff), rows[0])
-              this.setDashedBorderStyle(this.left, this.top - h, this.width, h)
-            } else {
-              // left
-              const w = this.getColsWidth(Math.abs(cdiff), cols[0])
-              if (cdiff < 0) {
-                this.setDashedBorderStyle(this.left, this.top, this.width + w, this.height)
-              } else {
-                this.setDashedBorderStyle(this.left - w, this.top, w, this.height)
-              }
-            }
+            this.setDashedBorderStyle(this.left, this.top, this.width, this.height)
+            boxRange = null
           }
         }
       }, (evt) => {
         this.visableDashedBorder = false
+        if (boxRange !== null) {
+          this.$emit('copy', ...boxRange)
+        }
       })
     },
     mousedownHandler (evt) {
@@ -215,7 +226,7 @@ export default {
 
         cCol = eCol
         dcell = getDataRowCol(j, cCol)
-        // console.log(j, cCol, dcell.colspan)
+        console.log(j, cCol, dcell.colspan)
         const cColspan = dcell.colspan || 1
         if (parseInt(cColspan) > 1) {
           cCol += parseInt(cColspan)
