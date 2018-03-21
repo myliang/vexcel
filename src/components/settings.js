@@ -21,13 +21,13 @@ const formats = [
   // {key: 'date', title: '日期', label: '2016/12/12'},
   // {key: 'dateTime', title: '日期时间', label: '2016/12/12 00:00:00'}
 ]
-const formatRenderHtml = (v) => {
+const formatRenderHtml = (format, txt) => {
   for (let i = 0; i < formats.length; i++) {
-    if (formats[i].key === v.format) {
-      return formats[i].render(v.text)
+    if (formats[i].key === format) {
+      return formats[i].render(txt)
     }
   }
-  return v.text
+  return txt
 }
 const fonts = [
   {key: 'Microsoft YaHei', title: '微软雅黑'},
@@ -38,11 +38,23 @@ const fonts = [
   {key: 'Verdana', title: 'Verdana'}
 ]
 const formulas = [
-  {key: 'SUM', title: '求和'},
-  {key: 'AVERAGE', title: '平均值'},
-  {key: 'MAX', title: '最大值'},
-  {key: 'MIN', title: '最小值'}
+  {key: 'SUM', title: '求和', fn: (vv) => vv.reduce((a, b) => a + b, 0)},
+  {key: 'AVERAGE', title: '平均值', fn: (vv) => vv.reduce((a, b) => a + b, 0) / vv.length},
+  {key: 'MAX', title: '最大值', fn: (vv) => Math.max(...vv)},
+  {key: 'MIN', title: '最小值', fn: (vv) => Math.min(...vv)}
 ]
+
+const formulaFilterKey = (v, filter) => {
+  if (v[0] === '=') {
+    const fx = v.substring(1, v.indexOf('('))
+    for (let formula of formulas) {
+      if (formula.key.toLowerCase() === fx.toLowerCase()) {
+        return filter(formula, v.substring(v.indexOf('(') + 1, v.indexOf(')')))
+      }
+    }
+  }
+  return v
+}
 
 const defaultCellAttrs = {
   font: fonts[0].key,
@@ -56,7 +68,6 @@ const defaultCellAttrs = {
   align: 'left',
   valign: 'middle',
   wordWrap: 'normal',
-  formula: '',
   invisable: false,
   rowspan: 1,
   colspan: 1
@@ -87,7 +98,7 @@ const cellStyle = (attrs) => {
 }
 
 const keyIsStyleAttr = (key) => {
-  return key !== 'formula' && key !== 'rowspan' && key !== 'colspan' && key !== 'text'
+  return key !== 'rowspan' && key !== 'colspan' && key !== 'text'
 }
 
 const filterStyleAttrs = (attrs) => {
@@ -128,6 +139,7 @@ export {
   formats,
   fonts,
   formulas,
+  formulaFilterKey,
   defaultCellAttrs,
   cellStyle,
   filterStyleAttrs,

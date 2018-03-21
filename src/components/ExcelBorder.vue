@@ -75,24 +75,24 @@ export default {
             // bottom
             // console.log('FCK=>bottom')
             this.setDashedBorderStyle(this.left, this.top, this.width, this.height + this.getRowsHeight(Math.abs(rdiff), lastRow))
-            boxRange = [lastRow + 1, firstCol, lastRow + Math.abs(rdiff), lastCol]
+            boxRange = ['bottom', lastRow + 1, firstCol, lastRow + Math.abs(rdiff), lastCol]
           } else if (cdiff < 0) {
             // right
             // console.log('FCK=>right')
             this.setDashedBorderStyle(this.left, this.top, this.width + this.getColsWidth(Math.abs(cdiff), lastCol), this.height)
-            boxRange = [firstRow, lastCol + 1, lastRow, lastCol + Math.abs(cdiff)]
+            boxRange = ['right', firstRow, lastCol + 1, lastRow, lastCol + Math.abs(cdiff)]
           } else if (_rdiff > 0) {
             // top
             // console.log('FCK=>top')
             const h = this.getRowsHeight(Math.abs(_rdiff), firstRow)
             this.setDashedBorderStyle(this.left, this.top - h, this.width, h)
-            boxRange = [firstRow - Math.abs(_rdiff), firstCol, firstRow - 1, lastCol]
+            boxRange = ['top', firstRow - Math.abs(_rdiff), firstCol, firstRow - 1, lastCol]
           } else if (_cdiff > 0) {
             // left
             // console.log('FCK=>left')
             const w = this.getColsWidth(Math.abs(_cdiff), firstCol)
             this.setDashedBorderStyle(this.left - w, this.top, w, this.height)
-            boxRange = [firstRow, firstCol - Math.abs(_cdiff), lastRow, firstCol - 1]
+            boxRange = ['left', firstRow, firstCol - Math.abs(_cdiff), lastRow, firstCol - 1]
           } else {
             this.setDashedBorderStyle(this.left, this.top, this.width, this.height)
             boxRange = null
@@ -101,7 +101,7 @@ export default {
       }, (evt) => {
         this.visableDashedBorder = false
         if (boxRange !== null) {
-          this.$emit('copy', ...boxRange)
+          this.$emit('copy', evt, ...boxRange)
         }
       })
     },

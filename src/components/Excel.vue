@@ -67,7 +67,7 @@
               :row-index="rindex" :col-index="cindex" type="cell"
               @dblclick.left.stop="cellDblclickHandler(rindex, cindex, $event)"
               @mousedown.left="cellMousedownHandler(rindex, cindex, $event)">
-              {{ value[rindex] && value[rindex][cindex] && formatRenderHtml(value[rindex][cindex]) }}
+              {{ value[rindex] && value[rindex][cindex] && renderCell(value[rindex][cindex]) }}
             </td>
           </tr>
         </tbody>
@@ -102,7 +102,7 @@ import ExcelEditor from './ExcelEditor'
 import ExcelResizer from './ExcelResizer'
 import ExcelEditorBar from './ExcelEditorBar'
 import ExcelToolbar from './ExcelToolbar'
-import { defaultCols, formats, fonts, formulas, defaultCellAttrs, cellStyle, getStyleAttrs, formatRenderHtml } from './settings.js'
+import { defaultCols, formats, fonts, formulas, formulaFilterKey, defaultCellAttrs, cellStyle, getStyleAttrs, formatRenderHtml } from './settings.js'
 
 export default {
   name: 'v-excel',
@@ -152,6 +152,45 @@ export default {
     bind('keydown', this.copyPasteHandler)
   },
   methods: {
+    renderCell (cell) {
+      const colMap = {}
+      this.value.cols.forEach((col, i) => {
+        colMap[col.index] = i
+      })
+      const txt = formulaFilterKey(cell.text, (fx, params) => {
+        let paramValues = []
+        if (params.indexOf(':') !== -1) {
+          const [min, max] = params.split(':')
+          const idx = /\d+/.exec(min).index
+          const maxIdx = /\d+/.exec(max).index
+          let minC = min.substring(0, idx)
+          let minR = parseInt(min.substring(idx))
+
+          let maxC = max.substring(0, maxIdx)
+          let maxR = parseInt(max.substring(maxIdx))
+          // console.log(min, max, minR, maxR, minC, maxC)
+          if (maxC === minC) {
+            for (let i = minR; i <= maxR; i++) {
+              paramValues.push(Number(this.getDataRowCol(i - 1, colMap[minC]).text))
+            }
+          } else {
+            for (let i = colMap[minC]; i <= colMap[maxC]; i++) {
+              paramValues.push(Number(this.getDataRowCol(minR - 1, i).text))
+            }
+          }
+        } else {
+          paramValues = params.split(',').map(p => {
+            const idx = /\d+/.exec(p).index
+            const c = p.substring(0, idx)
+            const r = p.substring(idx)
+            return Number(this.getDataRowCol(r - 1, colMap[c]).text)
+          })
+        }
+        // console.log('values:', paramValues)
+        return fx.fn(paramValues)
+      })
+      return formatRenderHtml(cell.format, txt)
+    },
     rowColMouseOverHandler (type, index, evt) {
       // mouse key left pressed
       // console.log('>>>>>>>>over')
@@ -251,8 +290,63 @@ export default {
         this.selectedBox = null
       }
     },
-    copyBorderHandler (x, y, x1, y1) {
-      console.log('>>>', x, y, x1, y1)
+    copyBorderHandler (evt, position, x, y, x1, y1) {
+      // console.log('>>>', evt, x, y, x1, y1)
+      const { rows, cols } = this.$refs.eborder.getActivies()
+      const colMap = {}
+      this.value.cols.forEach((col, i) => {
+        colMap[col.index] = i
+      })
+      for (let i = x; i <= x1; i++) {
+        for (let j = y; j <= y1; j++) {
+          const copyRow = rows[(i - x) % rows.length]
+          const copyCol = cols[(j - y) % cols.length]
+          console.log(copyRow, copyCol, i, j, evt.ctrlKey)
+          this.copyStyleAttrs(copyRow, copyCol, i, j, true, (cell) => {
+            // int handler
+            if (evt.ctrlKey) {
+              let txt = cell.text
+              // console.log('::::::::', txt, position)
+              if (/^\d*$/.test(txt)) {
+                let tint = parseInt(txt)
+                if (position === 'top' || position === 'left') {
+                  tint -= (copyRow - i) + (copyCol - j)
+                } else {
+                  tint += (i - copyRow) + (j - copyCol)
+                }
+                cell.text = tint
+              }
+            }
+            // formalus handler
+            if (!/^\s*$/.test(cell.text)) {
+              const replaceFormula = (_v) => {
+                const idx = /\d+/.exec(_v).index
+                let vc = _v.substring(0, idx)
+                let vr = parseInt(_v.substring(idx))
+                if (position === 'top') {
+                  vr -= (copyRow - i) + (copyCol - j)
+                } else if (position === 'left') {
+                  vc = this.value.cols[colMap[vc] - ((copyRow - i) + (copyCol - j))].index
+                } else if (position === 'bottom') {
+                  vr += (j - copyCol) + (i - copyRow)
+                } else if (position === 'right') {
+                  vc = this.value.cols[colMap[vc] + ((j - copyCol) + (i - copyRow))].index
+                }
+                return `${vc}${vr}`
+              }
+              formulaFilterKey(cell.text, (fx, params) => {
+                if (params.indexOf(':') !== -1) {
+                  params = params.split(':').map(replaceFormula).join(':')
+                } else {
+                  params = params.split(',').map(replaceFormula).join(',')
+                }
+                cell.text = `=${fx.key}(${params})`
+              })
+            }
+            return cell
+          })
+        }
+      }
     },
     changePaintHandler (isCopy) {
       if (isCopy) {
@@ -313,14 +407,14 @@ export default {
     getEditValue (row, col) {
       return this.getDataRowCol(row, col)
     },
-    copyStyleAttrs (fromRow, fromCol, toRow, toCol, copyText = false) {
+    copyStyleAttrs (fromRow, fromCol, toRow, toCol, copyText = false, filter = (cell) => cell) {
       let {merge, ...fromCell} = this.getDataRowCol(fromRow, fromCol)
-      console.log('merge::', merge)
+      // console.log('merge::', merge)
       if (merge) {
         merge = [merge[0] + (toRow - fromRow), merge[1] + (toCol - fromCol)]
       }
-      console.log('>>>merge::', merge)
-      this.setDataRowCol(toRow, toCol, {merge, ...fromCell}, copyText)
+      // console.log('>>>merge::', merge)
+      this.setDataRowCol(toRow, toCol, filter({merge, ...fromCell}), copyText)
     },
     setCellAttrs (row, col) {
       const cell = this.getDataRowCol(row, col)
