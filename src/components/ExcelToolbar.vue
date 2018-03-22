@@ -1,8 +1,8 @@
 <template>
   <div class="ve-toolbar">
     <div class="ve-menu horizontal">
-      <item-icon icon="undo" disabled></item-icon>
-      <item-icon icon="redo" disabled></item-icon>
+      <!-- <item-icon icon="undo" disabled></item-icon> -->
+      <!-- <item-icon icon="redo" disabled></item-icon> -->
       <!-- <item-icon icon="print" @click="printHandler"></item-icon> -->
       <item-icon icon="paintformat" :active="paintFormatActive" @click="copyFormatHandler"></item-icon>
       <item-icon icon="clearformat" @click="clearFormatHandler"></item-icon>
@@ -70,7 +70,7 @@
       <item-icon icon="textwrap" :active="attrs.wordWrap === 'break-word'" @click="radioHandler('wordWrap', 'break-word')"></item-icon>
       <div class="ve-item-separator"></div>
       <!-- <item-icon :icon="it" :key="it" v-for="it in ['autofilter']"></item-icon> -->
-      <dropdown class="ve-item" width="160px">
+      <!-- <dropdown class="ve-item" width="160px">
         <icon name="formula" :style="{width: '18px'}" slot="title"></icon>
         <div class="ve-menu vertical">
           <item-icon v-for="formula in formulas"
@@ -79,7 +79,7 @@
             {{ formula.key }} {{formula.title}}
           </item-icon>
         </div>
-      </dropdown>
+      </dropdown> -->
     </div>
   </div>
 </template>

@@ -81,6 +81,7 @@
         :target="pborderTarget"/>
       <excel-editor
         :target="editor.target"
+        :formulas="formulas"
         v-model="editor.value"
         v-if="editor && editor.target"
         ref="editor">
