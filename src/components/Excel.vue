@@ -160,32 +160,36 @@ export default {
       })
       const txt = formulaFilterKey(cell.text, (fx, params) => {
         let paramValues = []
-        if (params.indexOf(':') !== -1) {
-          const [min, max] = params.split(':')
-          const idx = /\d+/.exec(min).index
-          const maxIdx = /\d+/.exec(max).index
-          let minC = min.substring(0, idx)
-          let minR = parseInt(min.substring(idx))
+        try {
+          if (params.indexOf(':') !== -1) {
+            const [min, max] = params.split(':')
+            const idx = /\d+/.exec(min).index
+            const maxIdx = /\d+/.exec(max).index
+            let minC = min.substring(0, idx)
+            let minR = parseInt(min.substring(idx))
 
-          let maxC = max.substring(0, maxIdx)
-          let maxR = parseInt(max.substring(maxIdx))
-          // console.log(min, max, minR, maxR, minC, maxC)
-          if (maxC === minC) {
-            for (let i = minR; i <= maxR; i++) {
-              paramValues.push(Number(this.getDataRowCol(i - 1, colMap[minC]).text))
+            let maxC = max.substring(0, maxIdx)
+            let maxR = parseInt(max.substring(maxIdx))
+            // console.log(min, max, minR, maxR, minC, maxC)
+            if (maxC === minC) {
+              for (let i = minR; i <= maxR; i++) {
+                paramValues.push(Number(this.getDataRowCol(i - 1, colMap[minC]).text))
+              }
+            } else {
+              for (let i = colMap[minC]; i <= colMap[maxC]; i++) {
+                paramValues.push(Number(this.getDataRowCol(minR - 1, i).text))
+              }
             }
-          } else {
-            for (let i = colMap[minC]; i <= colMap[maxC]; i++) {
-              paramValues.push(Number(this.getDataRowCol(minR - 1, i).text))
-            }
+          } else if (params.indexOf(',') !== -1) {
+            paramValues = params.split(',').map(p => {
+              const idx = /\d+/.exec(p).index
+              const c = p.substring(0, idx)
+              const r = p.substring(idx)
+              return Number(this.getDataRowCol(r - 1, colMap[c]).text)
+            })
           }
-        } else {
-          paramValues = params.split(',').map(p => {
-            const idx = /\d+/.exec(p).index
-            const c = p.substring(0, idx)
-            const r = p.substring(idx)
-            return Number(this.getDataRowCol(r - 1, colMap[c]).text)
-          })
+        } catch (e) {
+          // console.log('warning:', e)
         }
         // console.log('values:', paramValues)
         return fx.fn(paramValues)

@@ -68,7 +68,7 @@
         </div>
       </dropdown>
       <item-icon icon="textwrap" :active="attrs.wordWrap === 'break-word'" @click="radioHandler('wordWrap', 'break-word')"></item-icon>
-      <div class="ve-item-separator"></div>
+      <!-- <div class="ve-item-separator"></div> -->
       <!-- <item-icon :icon="it" :key="it" v-for="it in ['autofilter']"></item-icon> -->
       <!-- <dropdown class="ve-item" width="160px">
         <icon name="formula" :style="{width: '18px'}" slot="title"></icon>
