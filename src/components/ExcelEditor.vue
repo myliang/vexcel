@@ -58,7 +58,7 @@ export default {
       const clientWidth = document.documentElement.clientWidth
       const maxWidth = clientWidth - this.left - 24
       let ow = this.$refs.iw.offsetWidth + 16
-      console.log(':::', ow, offsetWidth)
+      // console.log(':::', ow, offsetWidth)
       if (ow > offsetWidth) {
         if (ow > maxWidth) {
           const h = (parseInt(ow / maxWidth) + 1) * 20
@@ -97,7 +97,7 @@ export default {
       } else if (evt.keyCode === 39) {
         this.selectedHandler(this.formulas[this.formulaActive])
       }
-      console.log('evt:::', evt)
+      // console.log('evt:::', evt)
     },
     updateValue (v) {
       this.changeHandler(v)

@@ -1,8 +1,8 @@
 <template>
   <div class="ve-toolbar">
     <div class="ve-menu horizontal">
-      <!-- <item-icon icon="undo" disabled></item-icon> -->
-      <!-- <item-icon icon="redo" disabled></item-icon> -->
+      <item-icon icon="undo" :disabled="history.length <= 0" @click.stop="undoHandler"></item-icon>
+      <item-icon icon="redo" :disabled="reHistory.length <=0" @click.stop="redoHandler"></item-icon>
       <!-- <item-icon icon="print" @click="printHandler"></item-icon> -->
       <item-icon icon="paintformat" :active="paintFormatActive" @click="copyFormatHandler"></item-icon>
       <item-icon icon="clearformat" @click="clearFormatHandler"></item-icon>
@@ -96,7 +96,9 @@ export default {
     formats: { type: Array, default: () => [] },
     fonts: { type: Array, default: () => [] },
     formulas: { type: Array, default: () => [] },
-    attrs: { type: Object, default: () => {} }
+    attrs: { type: Object, default: () => {} },
+    history: { type: Array },
+    reHistory: { type: Array }
   },
   data () {
     return {
@@ -114,6 +116,12 @@ export default {
     }
   },
   methods: {
+    undoHandler () {
+      this.$emit('undo')
+    },
+    redoHandler () {
+      this.$emit('redo')
+    },
     radioHandler (key, v) {
       this.selectedHandler(key, this.attrs[key] === v ? defaultCellAttrs[key] : v)
     },

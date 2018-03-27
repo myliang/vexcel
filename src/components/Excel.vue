@@ -6,9 +6,13 @@
         :fonts="fonts"
         :formulas="formulas"
         :attrs="cellAttrs"
+        :history="historyValues"
+        :reHistory="popHistoryValues"
         @change="changeToolbarHandler"
         @change-paint="changePaintHandler"
         @change-merge="changeMergeHandler"
+        @undo="undoHandler"
+        @redo="redoHandler"
         ref="toolbar"
         v-if="cellAttrs"></excel-toolbar>
       <excel-editor-bar
@@ -146,7 +150,9 @@ export default {
       selectedBox: null,
       copyPasteCells: null, // copy, paste cells
       isClearCopyCells: false,
-      current: null
+      current: null,
+      historyValues: [],
+      popHistoryValues: []
     }
   },
   mounted () {
@@ -207,6 +213,7 @@ export default {
       const { value } = this
       const w = value.cols[index].width + distance
       if (w <= 50) return
+      this.addHistoryValues()
       value.cols[index].width = w
       this.$refs[`col_${index}`].forEach(c => {
         c.width = w
@@ -218,6 +225,7 @@ export default {
       const { value } = this
       const h = value.rows[index].height + distance
       if (h <= 22) return
+      this.addHistoryValues()
       value.rows[index].height = h
       this.$refs[`row_${index}`].forEach(c => {
         c.height = h
@@ -229,7 +237,11 @@ export default {
       this.editor = {target: evt.target, value: this.getEditValue(row, col)}
     },
     cellMousedownHandler (row, col, evt) {
-      this.editor = null
+      // console.log(this.editor)
+      if (this.editor !== null && this.editor.target) {
+        // this.addHistoryValues()
+        this.editor = null
+      }
       if (!evt.shiftKey) {
         this.editorBar = {cell: `${this.value.cols[col].index}${row + 1}`, value: this.getEditValue(row, col)}
       }
@@ -241,6 +253,23 @@ export default {
       // set current data cell
       this.current = {row, col, cell: this.getDataRowCol(row, col)}
     },
+    undoHandler () {
+      if (this.historyValues.length > 0) {
+        const v = this.historyValues.pop()
+        this.popHistoryValues.push(v)
+        console.log('history: ', v)
+        this.resetValue(v)
+        this.setCellAttrs(this.current.row, this.current.col)
+      }
+    },
+    redoHandler () {
+      if (this.popHistoryValues.length > 0) {
+        const v = this.popHistoryValues.pop()
+        this.historyValues.push(v)
+        this.resetValue(v)
+        this.setCellAttrs(this.current.row, this.current.col)
+      }
+    },
     copyPasteHandler (evt) {
       // console.log('::::::::>>>', evt)
       if (evt.ctrlKey) {
@@ -248,13 +277,13 @@ export default {
         if (evt.keyCode === 67) {
           console.log('>>>', this.$refs.eborder)
           this.copyPasteCells = this.$refs.eborder.getActivies()
-          evt.keyCode = 0
+          evt.returnValue = false
         }
         // ctrl + x
         if (evt.keyCode === 88) {
           this.isClearCopyCells = true
           this.copyPasteCells = this.$refs.eborder.getActivies()
-          evt.keyCode = 0
+          evt.returnValue = false
         }
 
         // ctrl + v
@@ -262,9 +291,10 @@ export default {
           // console.log('ctrlV')
           if (this.copyPasteCells !== null) {
             const { rows, cols } = this.copyPasteCells
-            console.log('rows: ', rows, ', cols: ', cols)
+            // console.log('rows: ', rows, ', cols: ', cols)
             const c = this.$refs.eborder.getActivies()
             // console.log(rows, cols, '>>>>>>')
+            this.addHistoryValues()
             rows.forEach((row, rindex) => {
               cols.forEach((col, cindex) => {
                 this.copyStyleAttrs(row, col, c.rows[0] + rindex, c.cols[0] + cindex, true)
@@ -285,6 +315,7 @@ export default {
       // if paint format
       if (this.selectedBox !== null) {
         const { rows, cols } = this.selectedBox
+        this.addHistoryValues()
         this.$refs.eborder.cellForEach((row, rowIndex, col, colIndex) => {
           // let cell = this.getDataRowCol(row, col)
           const copyRow = rows[rowIndex % rows.length]
@@ -302,11 +333,12 @@ export default {
       this.value.cols.forEach((col, i) => {
         colMap[col.index] = i
       })
+      this.addHistoryValues()
       for (let i = x; i <= x1; i++) {
         for (let j = y; j <= y1; j++) {
           const copyRow = rows[(i - x) % rows.length]
           const copyCol = cols[(j - y) % cols.length]
-          console.log(copyRow, copyCol, i, j, evt.ctrlKey)
+          // console.log(copyRow, copyCol, i, j, evt.ctrlKey)
           this.copyStyleAttrs(copyRow, copyCol, i, j, true, (cell) => {
             // int handler
             if (evt.ctrlKey) {
@@ -366,6 +398,7 @@ export default {
       console.log('merge...', current)
       // 如果当前的单元格为合并单元格
       if (current.cell.rowspan > 1 || current.cell.colspan > 1) {
+        this.addHistoryValues()
         // 取消合并
         for (let i = 0; i < current.cell.rowspan; i++) {
           for (let j = 0; j < current.cell.colspan; j++) {
@@ -380,6 +413,7 @@ export default {
         // 合并
         let { rows, cols } = this.$refs.eborder.getActivies()
         if (rows.length > 1 || cols.length > 1) {
+          this.addHistoryValues()
           const cell = this.getDataRowCol(rows[0], cols[0])
           this.current = {row: rows[0], col: cols[0], cell}
           this.$set(cell, 'rowspan', rows.length)
@@ -396,10 +430,12 @@ export default {
       // console.log(this.value)
     },
     changeToolbarHandler (attrs) {
+      // console.log('attr: ', attrs)
+      this.addHistoryValues()
       this.$refs.eborder.cellForEach((row, rowIndex, col, colIndex) => {
         const cell = this.getDataRowCol(row, col)
         if (!cell.invisable) {
-          this.setDataRowCol(row, col, attrs, false, false)
+          this.setDataRowCol(row, col, Object.assign({}, cell, attrs), false, false)
         }
         this.borderReload()
       })
@@ -433,9 +469,23 @@ export default {
       }
       return this.value[row]
     },
+    resetValue (v) {
+      Object.keys(v).forEach(k => {
+        if (/^\d+$/.test(k)) {
+          // this.value.$set(k, v[k])
+          // console.log(k, v[k])
+          Object.keys(v[k]).forEach(k1 => {
+            this.setDataRowCol(k, k1, v[k][k1])
+          })
+        }
+        // this.$set(this.value, k, v[k])
+      })
+    },
     setDataRowCol (row, col, v, copyText = true, copyspan = true) {
+      // console.log('history: ', this.historyValues)
       let r = this.getDataRow(row)
       const cell = r[col]
+      console.log(':::::>', row, col, cell)
       if (!copyText && cell) {
         v.text = cell.text
       }
@@ -462,6 +512,12 @@ export default {
         this.$set(this.value[row], col, {text: ''})
       }
       return this.value[row][col]
+    },
+    addHistoryValues () {
+      this.historyValues.push(JSON.parse(JSON.stringify(this.value)))
+    },
+    changeHandler () {
+      this.$emit('change', this.value)
     },
     cellStyle,
     formatRenderHtml
